@@ -39,7 +39,7 @@ const templates = [
 const state = {
   time: 0, speed: 2, playing: false, timer: null, cursor: 0, score: [0,0],
   mode: 'casual', selectedInsight: null, compile: null, compiling: false,
-  programs: [], insights: [], processed: [], language:'en', overlay:false, demo:false,
+  programs: [], insights: [], processed: [], language:'en', overlay:false, demo:false, page:'home',
 };
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
@@ -194,9 +194,23 @@ function demoStep(){return state.time<64?0:state.time<151?1:state.time<232?2:3}
 function demoRail(){const steps=['Brief the AI','Watch the match','Detect the pattern','Explain the moment'];return `<div class="demo-rail"><span>LIVE DEMO</span>${steps.map((s,i)=>`<div class="${demoStep()>=i?'done':''} ${demoStep()===i?'now':''}"><i>${demoStep()>i?'✓':i+1}</i>${s}</div>`).join('')}<button id="exit-demo">EXIT</button></div>`}
 function broadcastOverlay(){const i=state.insights.find(x=>x.id===state.selectedInsight)||state.insights[0];if(!state.overlay||!i)return'';const c=translatedInsight(i);return `<div class="broadcast" role="dialog" aria-label="Broadcast overlay preview"><button id="close-broadcast">×</button><div class="broadcast-top"><span><i></i> DIRECTOR LIVE</span><b>${MATCH.home.short} ${state.score[0]} — ${state.score[1]} ${MATCH.away.short}</b><time>${fmt(state.time)}</time></div><div class="broadcast-stage"><span class="broadcast-kicker">AI MATCH INTELLIGENCE</span><h2>${esc(c.title)}</h2><p>${esc(c.text)}</p><div class="broadcast-proof"><span>✓ VERIFIED</span><b>${i.evidence.length} EVENT${i.evidence.length===1?'':'S'} ANALYSED</b><em>DIRECTOR/OS</em></div></div><div class="broadcast-caption">READY FOR LIVE PRODUCTION · 16:9 SAFE AREA · ${state.language.toUpperCase()}</div></div>`}
 
+function landingPage(){return `
+ <div class="landing">
+  <header class="landing-nav"><a class="brand" href="#"><span class="brand-mark"><i></i><i></i><i></i></span><span>DIRECTOR<span class="brand-muted">/OS</span></span></a><div><span class="prototype-pill">LIVE PROTOTYPE</span><button id="open-studio" class="nav-studio">OPEN STUDIO <span>↗</span></button></div></header>
+  <main class="landing-main">
+   <section class="landing-hero">
+    <div class="landing-copy"><span class="kicker">PERSONALIZED · REAL-TIME · EXPLAINABLE</span><h1>Your match.<br>Your questions.<br><em>Live answers.</em></h1><p>Tell Director what you care about. It watches every event and explains the moment when it happens—without guessing.</p><div class="landing-actions"><button id="run-demo" class="primary-cta"><span>▶</span> WATCH THE 90-SECOND DEMO</button><button id="open-studio" class="secondary-cta">TRY IT YOURSELF →</button></div><small>NO SETUP · SYNTHETIC MATCH DATA · FULLY INTERACTIVE</small></div>
+    <div class="story-card" aria-label="How Director turns a fan request into a verified insight"><div class="story-head"><span><i></i> DIRECTOR IS WATCHING</span><b>LIVE · 03:52</b></div><div class="fan-question"><span>YOU ASKED</span><p>“Tell me when East United's high press starts working.”</p></div><div class="story-flow"><div><i>1</i><span>Understands your question</span></div><b>→</b><div><i>2</i><span>Watches every event</span></div><b>→</b><div class="active"><i>3</i><span>Explains the moment</span></div></div><div class="answer-card"><span class="verified-mark">✓ VERIFIED INSIGHT</span><h2>The high press is working.</h2><p>East United recovered possession in the attacking third three times in five minutes.</p><div class="evidence-dots"><span>01:04 · Recovery</span><span>02:31 · Recovery</span><span>03:52 · Recovery</span></div></div></div>
+   </section>
+   <section class="value-strip"><span>ONE QUESTION</span><b>→</b><span>LIVE EVENT MONITOR</span><b>→</b><span>VERIFIED INSIGHT</span><b>→</b><span>BROADCAST-READY STORY</span></section>
+   <section class="landing-proof"><div><span class="proof-num">01</span><h3>Ask naturally</h3><p>No dashboards to configure. Describe the moment you care about in plain language.</p></div><div><span class="proof-num">02</span><h3>Trust the answer</h3><p>Every insight links to the exact events, timestamps and calculations that triggered it.</p></div><div><span class="proof-num">03</span><h3>Tell it your way</h3><p>Switch audience, language and output—from fan explanation to live broadcast graphics.</p></div></section>
+   <section class="landing-final"><span>BUILT FOR THE MICROSOFT × PREMIER LEAGUE HACKATHON</span><h2>Football intelligence should feel personal.<br><em>And prove every word.</em></h2><button id="run-demo" class="primary-cta"><span>▶</span> SEE IT IN ACTION</button></section>
+  </main><footer class="landing-footer"><span>DIRECTOR/OS · AGENTIC MATCH INTELLIGENCE</span><span>SYNTHETIC DATA · DETERMINISTIC EXECUTION · EXPLAINABLE OUTPUT</span></footer>
+ </div>`}
+
 function appHtml() { const last=state.processed[state.processed.length-1]; return `
  ${state.demo?demoRail():''}${broadcastOverlay()}
- <header><a class="brand" href="#"><span class="brand-mark"><i></i><i></i><i></i></span><span>DIRECTOR<span class="brand-muted">/OS</span></span></a><nav><button class="demo-btn" id="run-demo">▶ 2-MIN DEMO</button><select id="language" aria-label="Commentary language"><option value="en" ${state.language==='en'?'selected':''}>EN</option><option value="zh" ${state.language==='zh'?'selected':''}>中文</option><option value="es" ${state.language==='es'?'selected':''}>ES</option></select><span class="live-pill"><i></i> MATCH SIMULATION LIVE</span><div class="mode-switch"><button class="mode ${state.mode==='casual'?'on':''}" data-mode="casual">Fan view</button><button class="mode ${state.mode==='analyst'?'on':''}" data-mode="analyst">Analyst view</button></div></nav></header>
+ <header><button id="back-home" class="brand"><span class="brand-mark"><i></i><i></i><i></i></span><span>DIRECTOR<span class="brand-muted">/OS</span></span></button><nav><button class="demo-btn" id="run-demo">▶ RUN DEMO</button><select id="language" aria-label="Commentary language"><option value="en" ${state.language==='en'?'selected':''}>EN</option><option value="zh" ${state.language==='zh'?'selected':''}>中文</option><option value="es" ${state.language==='es'?'selected':''}>ES</option></select><span class="live-pill"><i></i> MATCH SIMULATION LIVE</span><div class="mode-switch"><button class="mode ${state.mode==='casual'?'on':''}" data-mode="casual">Fan view</button><button class="mode ${state.mode==='analyst'?'on':''}" data-mode="analyst">Analyst view</button></div></nav></header>
  <main>
   <section class="hero">
    <div><span class="kicker">AGENTIC MATCH INTELLIGENCE</span><h1>See the match<br><em>your way.</em></h1></div>
@@ -244,9 +258,11 @@ function bind() {
  document.querySelector('#language')?.addEventListener('change',e=>{state.language=e.target.value;render()});
  document.querySelector('#show-broadcast')?.addEventListener('click',()=>{state.overlay=true;render()});
  document.querySelector('#close-broadcast')?.addEventListener('click',()=>{state.overlay=false;render()});
- document.querySelector('#run-demo')?.addEventListener('click',()=>{clearInterval(state.timer);state.time=0;state.cursor=0;state.score=[0,0];state.processed=[];state.insights=[];state.selectedInsight=null;state.compile=null;state.speed=8;state.demo=true;const c=compileIntent(templates[0]);state.programs=[{...c,id:'demo_high_press',version:1,active:true,lastTrigger:null,conditionActive:false}];state.playing=true;state.timer=setInterval(tick,500);render()});
+ document.querySelectorAll('#run-demo').forEach(b=>b.addEventListener('click',()=>{clearInterval(state.timer);state.page='studio';state.time=0;state.cursor=0;state.score=[0,0];state.processed=[];state.insights=[];state.selectedInsight=null;state.compile=null;state.speed=8;state.demo=true;const c=compileIntent(templates[0]);state.programs=[{...c,id:'demo_high_press',version:1,active:true,lastTrigger:null,conditionActive:false}];state.playing=true;state.timer=setInterval(tick,500);render();window.scrollTo(0,0)}));
+ document.querySelectorAll('#open-studio').forEach(b=>b.addEventListener('click',()=>{state.page='studio';render();window.scrollTo(0,0)}));
+ document.querySelector('#back-home')?.addEventListener('click',()=>{clearInterval(state.timer);state.playing=false;state.demo=false;state.overlay=false;state.page='home';render();window.scrollTo(0,0)});
  document.querySelector('#exit-demo')?.addEventListener('click',()=>{state.demo=false;render()});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&state.overlay){state.overlay=false;render()}},{once:true});
 }
-function render(){ document.querySelector('#app').innerHTML=appHtml(); bind(); }
+function render(){ document.querySelector('#app').innerHTML=state.page==='home'?landingPage():appHtml(); bind(); }
 render();
