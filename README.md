@@ -1,30 +1,78 @@
 # Football Director OS
 
-**Don't just watch the game. Direct it.**
+> Your match. Your questions. Live answers.
 
-Football Director OS is a hackathon MVP that compiles natural-language viewing preferences into constrained, inspectable football monitoring programs. Those programs run deterministically against a synthetic event stream and emit evidence-backed insights.
+Football Director OS turns a fan's natural-language question into a live, explainable match monitor. It watches a synthetic football event stream, detects the requested pattern deterministically, and produces audience-specific commentary, evidence and broadcast-ready output.
+
+Built for the **Microsoft × Premier League Inside the Game Developer Hackathon**.
+
+## Why it matters
+
+Every viewer cares about something different, but traditional broadcasts give everyone the same feed. Director lets a fan, analyst or producer describe the moment they care about and receive an answer only when the source events prove it happened.
+
+## Demo flow
+
+1. Ask: `Alert me when East United wins possession in the attacking third three times within five minutes.`
+2. Director compiles the request into a constrained monitoring program.
+3. The deterministic temporal engine evaluates the live event stream.
+4. When the pattern occurs, Director explains why it matters.
+5. The exact source events, timestamps and computation remain available for audit.
+6. The verified insight can be rendered for fans, analysts or live broadcast in English, Chinese or Spanish.
+
+Use **Watch the 90-second demo** on the homepage for the guided experience. See [DEMO_SCRIPT.md](DEMO_SCRIPT.md) for the submission-video script.
+
+## Features
+
+- synthetic event-stream replay with passes, shots, tackles, recoveries and pressure;
+- natural-language monitoring instructions;
+- count-threshold, player-event and ordered-sequence detection;
+- rising-edge and cooldown duplicate suppression;
+- evidence-backed insights with event IDs and computed values;
+- Fan and Analyst presentation modes;
+- English, Chinese and Spanish storytelling;
+- 16:9 broadcast overlay;
+- explicit refusal when requested analysis is unsupported by available data;
+- SQLite-backed versioned monitor registry;
+- Microsoft Foundry-compatible structured-output provider boundary;
+- Docker and GitHub Actions support.
+
+## Architecture
+
+```text
+Natural-language request
+        |
+        v
+Microsoft Foundry / deterministic fallback
+        |
+        v
+Validated monitoring DSL
+        |
+        v
+Temporal rule engine <--- synthetic live event stream
+        |
+        +----> evidence ledger
+        +----> fan / analyst narrative
+        +----> multilingual broadcast overlay
+```
+
+The model may propose a monitoring program, but it never decides whether a match event occurred. Every program is validated locally and every emitted insight is calculated by deterministic code.
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for component and trust-boundary details.
 
 ## Run locally
+
+Requirements: Node.js 20+ and Python 3.11+.
 
 ```bash
 npm install
 npm run dev
 ```
 
-The current vertical slice is browser-only and deliberately has no external API dependency. It includes:
+Open `http://127.0.0.1:5174`.
 
-- deterministic synthetic match replay;
-- natural-language-to-JSON compilation for four supported intent families;
-- count-threshold, player-event and ordered-sequence execution;
-- rising-edge/cooldown duplicate suppression;
-- active program pause/delete controls;
-- evidence-backed insight inspection;
-- Casual Fan and Tactical Analyst presentations;
-- explicit refusal of requests unsupported by the available event fields.
+The browser demo remains fully functional without external credentials by using the safe deterministic compiler.
 
-The repository also contains a typed FastAPI reference backend with strict Pydantic validation, deterministic replay evaluation, OpenAPI documentation and regression tests.
-
-## Run the API
+### Optional API
 
 ```bash
 python3 -m venv .venv
@@ -33,45 +81,40 @@ pip install -r backend/requirements.txt
 PYTHONPATH=backend uvicorn app.main:app --reload --port 8000
 ```
 
-Open `http://127.0.0.1:8000/docs` for the generated API explorer.
+API documentation: `http://127.0.0.1:8000/docs`
 
-## Test
+### Optional Microsoft Foundry configuration
 
 ```bash
+cp .env.example .env
+```
+
+Set `FOUNDRY_ENDPOINT`, `FOUNDRY_API_KEY`, and `FOUNDRY_MODEL` locally. Never commit `.env`.
+
+## Test and build
+
+```bash
+npm run build
 PYTHONPATH=backend pytest -q backend/tests
 ```
 
-## Supported demo prompts
+The repository includes ten regression tests and an eight-case reference intent benchmark at `GET /api/evaluation/benchmark`.
 
-1. `Alert me when East United wins possession in the attacking third three times within five minutes.`
-2. `Follow every shot involving Player 7.`
-3. `Tell me when East United recovers possession and takes a shot within 15 seconds.`
-4. `Notify me when there are at least three shots in five minutes.`
-5. `Tell me when the left-back is leaving too much space behind him.` (intentional refusal demo)
+## Docker
 
-## Architecture
-
-The current compiler is deterministic so the replay remains independently testable. The planned provider boundary will add Microsoft Foundry structured output without making the model the source of truth for event detection.
-
-```text
-Natural language -> constrained compiler -> validated program
-                                              |
-Synthetic event replay -> temporal rule engine+-> structured insight -> presentation
-                                                     |
-                                                  evidence
+```bash
+docker build -t football-director-os .
+docker run --rm -p 8000:8000 football-director-os
 ```
 
-All teams, players and events are fictional. No match footage or proprietary football data is used.
+## Data and rights
 
-## Microsoft Foundry integration
+All clubs, players and match events in this repository are fictional and synthetic. The project includes no Premier League match footage, official club marks, proprietary event feeds, copyrighted music or redistributed sports data.
 
-Copy `.env.example` to `.env` locally and provide `FOUNDRY_ENDPOINT`, `FOUNDRY_API_KEY`, and `FOUNDRY_MODEL`. Never commit the `.env` file. When configured, the API uses Foundry for structured intent compilation and then validates every response against the local Pydantic DSL. If no provider is configured, the deterministic compiler keeps the full demo operational.
+## Submission status
 
-## Quality evidence
+See [SUBMISSION_CHECKLIST.md](SUBMISSION_CHECKLIST.md). Before submission, the repository must be public and the judging build must be accessible through an unrestricted URL, or the testing instructions must include working credentials.
 
-- deterministic engine and API regression tests;
-- eight-case reference intent benchmark at `GET /api/evaluation/benchmark`;
-- SQLite-backed versioned program registry;
-- GitHub Actions production-build and test gate;
-- multi-stage Docker image ready for Azure Container Apps;
-- fail-safe local compilation when the model endpoint is unavailable.
+## License
+
+MIT — see [LICENSE](LICENSE).
