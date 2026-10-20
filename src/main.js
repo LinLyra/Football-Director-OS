@@ -42,7 +42,8 @@ const state = {
   programs: [], insights: [], processed: [], language:'en', overlay:false, demo:false, page:'home',
 };
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+const isLocalPreview = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+const API_BASE = import.meta.env.VITE_API_BASE_URL || (isLocalPreview ? 'http://127.0.0.1:8000' : '');
 
 function fmt(sec) { return `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`; }
 function team(id) { return id === 'east' ? MATCH.home : MATCH.away; }
@@ -93,6 +94,7 @@ function normalizeApiProgram(payload, original) {
 }
 
 async function compileWithProvider(text) {
+  if (!API_BASE) return {...compileIntent(text), original:text, provider:'browser-safe-fallback'};
   const controller = new AbortController();
   const timeout = setTimeout(()=>controller.abort(), 2500);
   try {

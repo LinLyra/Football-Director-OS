@@ -107,6 +107,12 @@ docker build -t football-director-os .
 docker run --rm -p 8000:8000 football-director-os
 ```
 
+## Deploy the judging frontend to Vercel
+
+Import this public GitHub repository in Vercel. The included `vercel.json` selects Vite, runs `npm run build`, and publishes `dist`.
+
+The public frontend uses the deterministic browser compiler when `VITE_API_BASE_URL` is not configured, so the complete guided demo works without credentials or a separate API. To connect a hosted FastAPI service later, add `VITE_API_BASE_URL` in the Vercel project settings and redeploy.
+
 ## Data and rights
 
 All clubs, players and match events in this repository are fictional and synthetic. The project includes no Premier League match footage, official club marks, proprietary event feeds, copyrighted music or redistributed sports data.
