@@ -1,49 +1,143 @@
-# Football Director OS — 2-minute judging demo
+# Football Director OS — final demo recording script
 
-## 0:00–0:15 — The problem
+Target duration: **1:45–1:52**. The official limit is under two minutes, so do not exceed 1:55 after editing.
 
-**Voice-over:** “Every fan watches the same match, but cares about different things. Broadcasts cannot personalize attention for millions of viewers.”
+The spoken submission should be in English. Chinese production notes are included below each segment.
 
-Show the live match screen and the empty personal intelligence feed.
+## Before recording
 
-## 0:15–0:35 — Direct the match
+1. Use a desktop browser at 1440×900 or 1920×1080.
+2. Close unrelated tabs, notifications and bookmarks.
+3. Open the public, signed-out judging URL—not localhost.
+4. Confirm the homepage starts at the top.
+5. Confirm **Watch the 90-second demo** works from a fresh reload.
+6. Record without copyrighted music, match footage or official club marks.
+7. Use a steady cursor and pause briefly after every important visual change.
 
-Enter: “Alert me when East United wins possession in the attacking third three times within five minutes.”
+## 0:00–0:12 — Problem and promise
 
-**Voice-over:** “Director converts a sentence into a constrained, testable match program. The model proposes intent; deterministic code controls execution.”
+### Screen
 
-Create the monitor. Briefly open “View how this works”, then close it.
+Show the homepage hero. Keep the headline and example insight visible. Do not move the cursor for the first three seconds.
 
-## 0:35–1:05 — Real-time detection
+### Narration
 
-Start the replay. Let the three recoveries appear on the pitch.
+> Every football fan watches the same match, but cares about different moments. Football Director OS turns each viewer's question into live, explainable match intelligence.
 
-**Voice-over:** “The monitor runs continuously against the synthetic Premier League event stream. It waits for evidence instead of generating speculation.”
+### 中文提示
 
-When the insight fires, pause on “High press is producing turnovers.”
+先讲问题和价值，不要介绍技术栈。画面停在 `Your match. Your questions. Live answers.`。
 
-## 1:05–1:30 — Explainability
+## 0:12–0:24 — Start the guided demo
 
-Select the insight and show the three source events in the evidence panel.
+### Screen
 
-**Voice-over:** “Every conclusion is auditable: the rule, rolling window, computed count, event IDs, locations and timestamps are preserved.”
+Click **Watch the 90-second demo**. The Studio opens with the monitoring request already installed.
 
-Switch between Fan and Analyst views.
+### Narration
 
-## 1:30–1:47 — Global personalization
+> I ask Director to alert me when East United wins possession in the attacking third three times within five minutes.
 
-Change commentary from English to 中文 and then Español.
+### 中文提示
 
-**Voice-over:** “One verified match fact can be expressed for different audiences, languages and levels of expertise without changing the underlying evidence.”
+只点击一次首页主按钮。进入 Studio 后，让顶部演示进度条和监控指令同时出现。
 
-## 1:47–2:00 — Broadcast output
+## 0:24–0:41 — Agentic intent compilation
 
-Open Broadcast Overlay.
+### Screen
 
-**Voice-over:** “The same intelligence is ready for live production—not another dashboard, but an explainable operating system for personalized football.”
+Point to the natural-language request and then the active monitor. Briefly show **View program** only if timing allows.
 
-End on the full-screen overlay and the line: **See the match your way.**
+### Narration
 
-## One-click rehearsal
+> An AI provider can translate that request into a constrained monitoring program. The program is validated locally, and deterministic code—not the model—decides whether the event actually happened.
 
-Use **2-MIN DEMO** in the top navigation. It resets the match, installs the high-press monitor, accelerates the replay, and exposes the four judging beats in a guided rail.
+### 中文提示
+
+这是最重要的 Agentic AI 设计说明：AI 理解意图，确定性引擎负责事实判断。
+
+## 0:41–0:59 — Real-time event processing
+
+### Screen
+
+Let the accelerated synthetic replay run. Point out the three possession recoveries appearing on the pitch. Do not cut before the third recovery.
+
+### Narration
+
+> The monitor evaluates a synthetic live event stream continuously. It waits for three qualifying recoveries, suppresses duplicate alerts, and never invents missing evidence.
+
+### 中文提示
+
+保留球场事件点和顶部演示步骤。第三个夺回球权发生后，洞察会自动出现。
+
+## 0:59–1:17 — Explainability
+
+### Screen
+
+Pause after the insight appears. Select **High press is producing turnovers** and show the evidence inspector with all three timestamps and event IDs.
+
+### Narration
+
+> When the pattern is complete, Director explains why it matters. Every conclusion is auditable: here are the exact timestamps, locations, event IDs and rolling-window calculation behind the narrative.
+
+### 中文提示
+
+必须清晰拍到 `01:04`、`02:31`、`03:52` 三条证据和 `count: 3`。
+
+## 1:17–1:34 — Personalization
+
+### Screen
+
+Switch from **Fan view** to **Analyst view**. Then change the language from English to Chinese.
+
+### Narration
+
+> The verified fact stays the same, while the experience changes for a casual fan, a tactical analyst, or a global audience in another language.
+
+### 中文提示
+
+不要来回切太多。Fan → Analyst → 中文，每一步停一秒即可。
+
+## 1:34–1:49 — Broadcast output and closing
+
+### Screen
+
+Click **Open Broadcast Overlay**. End on the full-screen Chinese broadcast graphic for at least four seconds.
+
+### Narration
+
+> That same verified intelligence becomes a broadcast-ready story. Football Director OS makes every match personal—and proves every word.
+
+### 中文提示
+
+最后停在全屏 Overlay，不要再返回后台。总长度目标约 1 分 49 秒。
+
+## Complete English narration
+
+> Every football fan watches the same match, but cares about different moments. Football Director OS turns each viewer's question into live, explainable match intelligence.
+>
+> I ask Director to alert me when East United wins possession in the attacking third three times within five minutes.
+>
+> An AI provider can translate that request into a constrained monitoring program. The program is validated locally, and deterministic code—not the model—decides whether the event actually happened.
+>
+> The monitor evaluates a synthetic live event stream continuously. It waits for three qualifying recoveries, suppresses duplicate alerts, and never invents missing evidence.
+>
+> When the pattern is complete, Director explains why it matters. Every conclusion is auditable: here are the exact timestamps, locations, event IDs and rolling-window calculation behind the narrative.
+>
+> The verified fact stays the same, while the experience changes for a casual fan, a tactical analyst, or a global audience in another language.
+>
+> That same verified intelligence becomes a broadcast-ready story. Football Director OS makes every match personal—and proves every word.
+
+## Recording checklist
+
+- [ ] Final runtime below 1:55.
+- [ ] Homepage headline visible at the beginning.
+- [ ] Natural-language request clearly readable.
+- [ ] Three recovery events visibly trigger the insight.
+- [ ] Evidence panel and `count: 3` visible.
+- [ ] Fan/Analyst change visible.
+- [ ] Chinese commentary visible.
+- [ ] Broadcast overlay fills the closing frame.
+- [ ] No localhost URL in the final video.
+- [ ] No passwords, API keys, notifications or personal browser information visible.
+- [ ] Export at 1080p with readable text.
