@@ -17,6 +17,7 @@ Traditional football broadcasts give every viewer the same information even thou
 ## What we built
 
 - a synthetic real-time football event replay;
+- an original broadcast-style training visual with a transparent CV-adapter demonstration;
 - natural-language compilation into a constrained monitoring DSL;
 - deterministic count, event and ordered-sequence detection;
 - evidence-backed fan and analyst narratives;
@@ -39,20 +40,21 @@ Also relevant to the Grand Prize criteria. Do not select the Foundry category un
 
 ## Testing instructions
 
-1. Open `[PUBLIC_DEMO_URL]` in a desktop browser.
+1. Open `https://football-director-os.vercel.app` in a desktop browser.
 2. Click **Watch the 90-second demo**.
-3. Director automatically creates a monitor for three attacking-third possession recoveries inside five minutes.
-4. Wait for the third recovery and select the generated insight.
-5. Inspect the three source events and computed rolling-window count.
-6. Switch between **Fan view** and **Analyst view**.
-7. Change the language to Chinese or Spanish.
-8. Click **Open Broadcast Overlay**.
-9. Return to the homepage by selecting the Director/OS logo.
+3. In **Vision** view, follow the illustrated player/ball tracks and the Video → CV Adapter → Rule Engine pipeline. Switch to **Tactical Map** to inspect normalized event locations.
+4. Director automatically creates a monitor for three attacking-third possession recoveries inside five minutes.
+5. Wait for the third recovery and select the generated insight.
+6. Inspect the three source events and computed rolling-window count.
+7. Switch between **Fan view** and **Analyst view**.
+8. Change the language to Chinese or Spanish.
+9. Click **Open Broadcast Overlay**.
+10. Return to the homepage by selecting the Director/OS logo.
 
 No account, payment or API key should be required in the final public judging build.
 
 ## URLs
 
-- Public GitHub repository: `[PUBLIC_GITHUB_URL]`
+- Public GitHub repository: `https://github.com/LinLyra/Football-Director-OS`
 - Public demo video: `[PUBLIC_VIDEO_URL]`
-- Public working project: `[PUBLIC_DEMO_URL]`
+- Public working project: `https://football-director-os.vercel.app`
