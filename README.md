@@ -24,6 +24,7 @@ Use **Watch the 90-second demo** on the homepage for the guided experience. See 
 ## Features
 
 - synthetic event-stream replay with passes, shots, tackles, recoveries and pressure;
+- original synthetic broadcast-style training visual with an explicit CV-adapter overlay;
 - natural-language monitoring instructions;
 - count-threshold, player-event and ordered-sequence detection;
 - rising-edge and cooldown duplicate suppression;
@@ -116,6 +117,8 @@ The public frontend uses the deterministic browser compiler when `VITE_API_BASE_
 ## Data and rights
 
 All clubs, players and match events in this repository are fictional and synthetic. The project includes no Premier League match footage, official club marks, proprietary event feeds, copyrighted music or redistributed sports data.
+
+The Vision view is a transparent product-integration demo: its original synthetic training frame and illustrative track overlays show the contract expected from a detector/tracker, but this repository does **not** claim to run a production player/ball detector in the browser. The deterministic rule engine, evidence ledger and output renderers operate on the included normalized event stream. A real CV service can replace the adapter by emitting the same event schema.
 
 ## Submission status
 

@@ -5,6 +5,7 @@
 | Component | Responsibility | Deterministic |
 | --- | --- | --- |
 | Browser experience | Guided demo, Studio, pitch replay, insight feed and broadcast overlay | Yes |
+| Vision adapter demo | Maps detector/tracker-style output to the normalized event contract; bundled visual tracks are illustrative | Yes, illustrative input |
 | Intent provider | Converts supported natural-language requests into a constrained DSL | No; optional AI provider |
 | Program validator | Rejects malformed or unsupported programs using Pydantic schemas | Yes |
 | Temporal engine | Evaluates event matching, rolling windows and ordered sequences | Yes |
@@ -25,7 +26,7 @@ The language model is not the source of truth for football events. It may transl
 ## Event pipeline
 
 ```text
-Synthetic event
+Synthetic event / CV adapter event
   -> normalization
   -> active monitor evaluation
   -> threshold / sequence state update

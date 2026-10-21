@@ -39,7 +39,7 @@ const templates = [
 const state = {
   time: 0, speed: 2, playing: false, timer: null, cursor: 0, score: [0,0],
   mode: 'casual', selectedInsight: null, compile: null, compiling: false,
-  programs: [], insights: [], processed: [], language:'en', overlay:false, demo:false, page:'home',
+  programs: [], insights: [], processed: [], language:'en', overlay:false, demo:false, page:'home', view:'vision',
 };
 
 const isLocalPreview = ['localhost', '127.0.0.1'].includes(window.location.hostname);
@@ -165,6 +165,40 @@ function renderPitch() {
   </div>`;
 }
 
+const visionTracks = [
+  ['E14','east',38,38],['E08','east',44,43],['E06','east',31,55],['E21','east',65,39],
+  ['E03','east',68,60],['N11','north',55,42],['N07','north',53,58],['N18','north',72,50],
+  ['N04','north',81,58],['N22','north',34,72],['N09','north',71,73],['BALL','ball',51.5,58.5],
+];
+
+function renderVision() {
+  const pulse = (state.time % 12) / 12;
+  const last = state.processed[state.processed.length - 1];
+  return `<div class="vision-stage" aria-label="Synthetic training footage with illustrative computer vision detections">
+    <img src="/assets/football-vision-demo.png" alt="Original synthetic football training scene used to demonstrate the vision adapter">
+    <div class="vision-vignette"></div>
+    <div class="vision-hud top-left"><span><i></i> VISION ADAPTER</span><b>FRAME ${String(Math.floor(state.time * 25)).padStart(6,'0')}</b></div>
+    <div class="vision-hud top-right"><b>25 FPS</b><b>1080P</b><b>CALIBRATED</b></div>
+    ${visionTracks.map(([id,side,x,y],index)=>{
+      const dx = side === 'ball' ? pulse * 1.5 : Math.sin((state.time + index * 4) / 18) * .55;
+      const dy = side === 'ball' ? -pulse * .8 : Math.cos((state.time + index * 3) / 21) * .35;
+      return `<span class="track-box ${side}" style="left:${x+dx}%;top:${y+dy}%"><em>${id}</em>${side!=='ball'?`<small>${(0.91+(index%7)*.01).toFixed(2)}</small>`:''}</span>`;
+    }).join('')}
+    <svg class="ball-trail" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M44 55 Q48 60 53 57"/></svg>
+    <div class="vision-event"><span>${last ? eventLabel(last).toUpperCase() : 'AWAITING EVENT'}</span><b>${last ? `${team(last.team).short} · ${last.player}` : 'Tracker warm'}</b></div>
+    <div class="vision-disclosure">SYNTHETIC TRAINING FRAME · DETECTIONS ARE DEMO ADAPTER OUTPUT</div>
+  </div>`;
+}
+
+function sourcePipeline() {
+  return `<div class="source-pipeline">
+    <div><span>01</span><b>VIDEO</b><small>Synthetic training frame</small></div><i>→</i>
+    <div><span>02</span><b>CV ADAPTER</b><small>Tracks → normalized events</small></div><i>→</i>
+    <div class="live"><span>03</span><b>RULE ENGINE</b><small>Running · deterministic</small></div><i>→</i>
+    <div><span>04</span><b>STORY</b><small>Evidence-linked output</small></div>
+  </div>`;
+}
+
 function programCard(p) { return `<article class="program-card ${p.active?'active':''}">
   <div class="program-top"><span class="status-dot"></span><div><strong>${esc(p.name)}</strong><small>v${p.version} · ${p.active?'Monitoring live':'Paused'}</small></div><button class="icon-btn toggle-program" data-id="${p.id}">${p.active?'Ⅱ':'▶'}</button></div>
   <p>${esc(p.summary)}</p><div class="program-actions"><button class="text-btn inspect-program" data-id="${p.id}">View program</button><button class="text-btn delete-program" data-id="${p.id}">Delete</button></div>
@@ -220,9 +254,10 @@ function appHtml() { const last=state.processed[state.processed.length-1]; retur
    <div class="hero-stat"><strong>${String(state.programs.filter(p=>p.active).length).padStart(2,'0')}</strong><span>ACTIVE<br>MONITORS</span></div>
   </section>
   <section class="stage panel">
-   <div class="panel-label"><span>01</span><strong>LIVE MATCH</strong><small>Premier League synthetic event feed</small></div>
+   <div class="panel-label"><span>01</span><strong>LIVE MATCH</strong><div class="view-switch"><button class="view-mode ${state.view==='vision'?'on':''}" data-view="vision">VISION</button><button class="view-mode ${state.view==='map'?'on':''}" data-view="map">TACTICAL MAP</button></div><small>Fictional teams · original synthetic visual</small></div>
    <div class="scoreboard"><div class="club home"><span class="crest">EU</span><div><strong>${MATCH.home.name}</strong><small>HOME</small></div></div><div class="score"><b>${state.score[0]} – ${state.score[1]}</b><span>${fmt(state.time)} · DEMO MATCH</span></div><div class="club away"><div><strong>${MATCH.away.name}</strong><small>AWAY</small></div><span class="crest blue">NC</span></div></div>
-   ${renderPitch()}
+   ${state.view==='vision'?renderVision():renderPitch()}
+   ${sourcePipeline()}
    <div class="transport"><button id="reset">↺</button><button id="play" class="play">${state.playing?'Ⅱ':'▶'}</button><div class="timeline"><i style="width:${state.time/4.5}%"></i>${events.map(e=>`<span style="left:${e.time/4.5}%"></span>`).join('')}</div><select id="speed"><option ${state.speed===1?'selected':''}>1</option><option ${state.speed===2?'selected':''}>2</option><option ${state.speed===4?'selected':''}>4</option><option value="8" ${state.speed===8?'selected':''}>8</option></select><span>×</span></div>
    <div class="ticker"><span>LATEST EVENT</span><strong>${last?`${fmt(last.time)} · ${team(last.team).short} · ${eventLabel(last)} · ${last.player}`:'Waiting for kick-off'}</strong></div>
   </section>
@@ -247,6 +282,7 @@ function bind() {
  document.querySelector('#play')?.addEventListener('click',togglePlay);
  document.querySelector('#reset')?.addEventListener('click',reset);
  document.querySelector('#speed')?.addEventListener('change',e=>{state.speed=Number(e.target.value)});
+ document.querySelectorAll('.view-mode').forEach(b=>b.addEventListener('click',()=>{state.view=b.dataset.view;render()}));
  document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>{state.mode=b.dataset.mode;render()}));
  document.querySelector('#director-form')?.addEventListener('submit',async e=>{e.preventDefault();const text=document.querySelector('#intent').value.trim();state.compiling=true;state.compile={original:text};render();state.compile=await compileWithProvider(text);state.compiling=false;render()});
  document.querySelector('#intent')?.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter')document.querySelector('#director-form').requestSubmit()});
