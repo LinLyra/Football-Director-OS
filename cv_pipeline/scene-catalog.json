@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0",
+  "source_dataset": "SoccerNet/SN-Tracking-2023",
+  "asset_policy": "Source frames and generated videos stay local until redistribution rights are confirmed.",
+  "scenes": [
+    {
+      "id": "goal-threat",
+      "sequence": "SNMOT-101",
+      "title": "Goal threat",
+      "story": "An attacking move reaches the penalty area and produces a shot-level threat.",
+      "monitor_family": "ORDERED_SEQUENCE",
+      "required_events": ["FINAL_THIRD_ENTRY", "SHOT_CANDIDATE"],
+      "duration_seconds": 30,
+      "ground_truth": {"rows": 8767, "track_ids": 25, "small_object_track_frames": 742},
+      "baseline_inference": {"detections": 6334, "predicted_track_ids": 142, "effective_fps": 14.01},
+      "status": "tracking-verified_event-adapter-pending"
+    },
+    {
+      "id": "fast-transition",
+      "sequence": "SNMOT-068",
+      "title": "Fast transition",
+      "story": "The phase moves rapidly from penalty-area pressure into an open-field transition.",
+      "monitor_family": "ORDERED_SEQUENCE",
+      "required_events": ["POSSESSION_CHANGE_CANDIDATE", "FORWARD_PROGRESSION"],
+      "duration_seconds": 30,
+      "ground_truth": {"rows": 13396, "track_ids": 24, "small_object_track_frames": 718},
+      "baseline_inference": {"detections": 11066, "predicted_track_ids": 183, "effective_fps": 12.59},
+      "status": "tracking-verified_event-adapter-pending"
+    },
+    {
+      "id": "pressure-turnover",
+      "sequence": "SNMOT-099",
+      "title": "Pressure and turnover",
+      "story": "A wide attack draws multiple defenders into pressure before the phase resets.",
+      "monitor_family": "COUNT_THRESHOLD",
+      "required_events": ["PRESSURE_CANDIDATE", "POSSESSION_CHANGE_CANDIDATE"],
+      "duration_seconds": 30,
+      "ground_truth": {"rows": 10392, "track_ids": 25, "small_object_track_frames": 579},
+      "baseline_inference": {"detections": 7324, "predicted_track_ids": 132, "effective_fps": 13.36},
+      "status": "tracking-verified_event-adapter-pending"
+    }
+  ]
+}

@@ -4,11 +4,13 @@ The public demo should contain three preprocessed clips rather than arbitrary up
 
 | Scene | Target duration | Required observable signal | Director story |
 | --- | ---: | --- | --- |
-| High press | 15–25 s | repeated recoveries in the attacking third | pressure is disrupting build-up |
-| Fast transition | 10–20 s | recovery followed by forward progression and a shot candidate | counter-press creates immediate danger |
-| Shot surge | 20–30 s | three verified shot candidates in a rolling window | match becomes open and end-to-end |
+| Goal threat — `SNMOT-101` | 30 s | final-third entry followed by a shot candidate | the attack has produced a goal-level threat |
+| Fast transition — `SNMOT-068` | 30 s | possession-change candidate followed by forward progression | the phase has opened into a rapid transition |
+| Pressure and turnover — `SNMOT-099` | 30 s | multiple nearby defenders followed by a possession-change candidate | pressure has disrupted the attacking phase |
 
 Do not assign these stories by clip timestamp alone. The normalized events must be derived from model output, include confidence and frame evidence, and be accepted by the same deterministic Director rule engine used elsewhere.
+
+All three sequences have now been downloaded from the official public tracking subset and processed with the baseline pipeline. `scene-catalog.json` records the measured run statistics and deliberately marks semantic event adapters as pending.
 
 ## Acceptance gate
 
