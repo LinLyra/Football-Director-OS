@@ -3,9 +3,13 @@ dist/
 .DS_Store
 *.log
 .venv/
+.cv-venv/
 __pycache__/
 .pytest_cache/
 .env
 data/*.db
 .vercel/
 .openai/
+cv_data/
+cv_outputs/
+*.pt

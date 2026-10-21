@@ -120,6 +120,8 @@ All clubs, players and match events in this repository are fictional and synthet
 
 The Vision view is a transparent product-integration demo: its original synthetic training frame and illustrative track overlays show the contract expected from a detector/tracker, but this repository does **not** claim to run a production player/ball detector in the browser. The deterministic rule engine, evidence ledger and output renderers operate on the included normalized event stream. A real CV service can replace the adapter by emitting the same event schema.
 
+An optional offline [real-video CV pipeline](cv_pipeline/README.md) now runs genuine YOLO inference and ByteTrack tracking, exporting annotated H.264 video, frame-level JSONL tracks and a reproducibility manifest. The committed example manifest records a real 300-frame run. Its current COCO-person baseline is intentionally not wired into the public storyline because ball, team and semantic-event accuracy have not yet passed the documented acceptance gate.
+
 ## Submission status
 
 See [SUBMISSION_CHECKLIST.md](SUBMISSION_CHECKLIST.md). Before submission, the repository must be public and the judging build must be accessible through an unrestricted URL, or the testing instructions must include working credentials.

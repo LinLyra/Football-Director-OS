@@ -1,0 +1,22 @@
+{
+  "pipeline": "YOLO object detection + ByteTrack multi-object tracking",
+  "input": "amateur-match-cc-by.mp4",
+  "model": "yolo11n.pt",
+  "device": "mps",
+  "source_fps": 30.0,
+  "frames_processed": 300,
+  "processing_seconds": 88.91,
+  "effective_fps": 3.37,
+  "detections": 1912,
+  "unique_track_ids": 132,
+  "limitations": [
+    "COCO person detections only",
+    "No ball detector",
+    "No automatic team identity",
+    "No semantic pass, shot, or possession inference"
+  ],
+  "runtime": {
+    "python": "3.9.6",
+    "torch": "2.8.0"
+  }
+}
