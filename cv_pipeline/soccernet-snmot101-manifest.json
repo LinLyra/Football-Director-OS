@@ -1,0 +1,33 @@
+{
+  "source": {
+    "dataset": "SoccerNet Tracking 2023",
+    "repository": "SoccerNet/SN-Tracking-2023",
+    "split": "train",
+    "sequence": "SNMOT-101",
+    "frames": 750,
+    "resolution": "1920x1080",
+    "fps": 25,
+    "ground_truth_rows": 8767,
+    "ground_truth_track_ids": 25
+  },
+  "inference": {
+    "pipeline": "YOLO object detection + ByteTrack multi-object tracking",
+    "model": "yolo11n.pt",
+    "device": "mps",
+    "frames_processed": 750,
+    "processing_seconds": 53.53,
+    "effective_fps": 14.01,
+    "detections": 6334,
+    "unique_predicted_track_ids": 142
+  },
+  "assessment": {
+    "status": "real pipeline verified; baseline accuracy not accepted for semantic claims",
+    "observations": [
+      "The sequence contains a clear penalty-area attacking action.",
+      "The official ground truth contains a small-object track across 742 frames consistent with the visible ball.",
+      "The generic COCO-person model detects players, officials and goalkeeper but does not detect the ball.",
+      "Predicted identity fragmentation is too high for production event inference."
+    ]
+  },
+  "completed_at": "2026-10-21T23:35:00+11:00"
+}
