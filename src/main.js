@@ -184,37 +184,23 @@ function renderPitch() {
   </div>`;
 }
 
-const visionTracks = [
-  ['E14','east',38,38],['E08','east',44,43],['E06','east',31,55],['E21','east',65,39],
-  ['E03','east',68,60],['N11','north',55,42],['N07','north',53,58],['N18','north',72,50],
-  ['N04','north',81,58],['N22','north',34,72],['N09','north',71,73],['BALL','ball',51.5,58.5],
-];
-
 function renderVision() {
-  const pulse = (state.time % 12) / 12;
-  const last = state.processed[state.processed.length - 1];
-  return `<div class="vision-stage" aria-label="Synthetic training footage with illustrative computer vision detections">
-    <img src="/assets/football-vision-demo.png" alt="Original synthetic football training scene used to demonstrate the vision adapter">
+  return `<div class="vision-stage real-feed" aria-label="Real licensed football video processed by YOLO and ByteTrack">
+    <video id="studio-real-video" src="/licensed/pexels-15448993/tracked.mp4" autoplay muted loop playsinline preload="auto"></video>
     <div class="vision-vignette"></div>
-    <div class="vision-hud top-left"><span><i></i> VISION ADAPTER</span><b>FRAME ${String(Math.floor(state.time * 25)).padStart(6,'0')}</b></div>
-    <div class="vision-hud top-right"><b>25 FPS</b><b>1080P</b><b>CALIBRATED</b></div>
-    ${visionTracks.map(([id,side,x,y],index)=>{
-      const dx = side === 'ball' ? pulse * 1.5 : Math.sin((state.time + index * 4) / 18) * .55;
-      const dy = side === 'ball' ? -pulse * .8 : Math.cos((state.time + index * 3) / 21) * .35;
-      return `<span class="track-box ${side}" style="left:${x+dx}%;top:${y+dy}%"><em>${id}</em>${side!=='ball'?`<small>${(0.91+(index%7)*.01).toFixed(2)}</small>`:''}</span>`;
-    }).join('')}
-    <svg class="ball-trail" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M44 55 Q48 60 53 57"/></svg>
-    <div class="vision-event"><span>${last ? eventLabel(last).toUpperCase() : 'AWAITING EVENT'}</span><b>${last ? `${team(last.team).short} · ${last.player}` : 'Tracker warm'}</b></div>
-    <div class="vision-disclosure">SYNTHETIC TRAINING FRAME · DETECTIONS ARE DEMO ADAPTER OUTPUT</div>
+    <div class="vision-hud top-left"><span><i></i> REAL CV OUTPUT</span><b>YOLO + BYTETRACK</b></div>
+    <div class="vision-hud top-right"><b>30 FPS WEB</b><b>720P</b><b>PEXELS LICENSED</b></div>
+    <div class="vision-event"><span>10 EVENT CANDIDATES</span><b>73.7% ball-frame coverage</b></div>
+    <div class="vision-disclosure">REAL MATCH FOOTAGE · 3,183 PERSON DETECTIONS · 795 BALL FRAMES · LUIS QUINTERO / PEXELS</div>
   </div>`;
 }
 
 function sourcePipeline() {
   return `<div class="source-pipeline">
-    <div><span>01</span><b>VIDEO</b><small>Synthetic training frame</small></div><i>→</i>
-    <div><span>02</span><b>CV ADAPTER</b><small>Tracks → normalized events</small></div><i>→</i>
+    <div><span>01</span><b>REAL VIDEO</b><small>Pexels licensed · 1,078 frames</small></div><i>→</i>
+    <div><span>02</span><b>YOLO + BYTETRACK</b><small>Person + ball tracks</small></div><i>→</i>
     <div class="live"><span>03</span><b>RULE ENGINE</b><small>Running · deterministic</small></div><i>→</i>
-    <div><span>04</span><b>STORY</b><small>Evidence-linked output</small></div>
+    <div><span>04</span><b>EVIDENCE</b><small>10 labelled candidates</small></div>
   </div>`;
 }
 
@@ -276,9 +262,9 @@ function realLabPage(){const selected=REAL_SCENES.find(scene=>scene.id===state.r
   </main><footer><span>Pexels public demo · SoccerNet local research validation</span><span>LICENSE RECORDED · OUTPUTS LABELLED · EVIDENCE PUBLIC</span></footer>
  </div>`}
 
-function appHtml() { const last=state.processed[state.processed.length-1]; return `
+function appHtml() { const last=state.processed[state.processed.length-1]; const vision=state.view==='vision'; return `
  ${state.demo?demoRail():''}${broadcastOverlay()}
- <header><button id="back-home" class="brand"><span class="brand-mark"><i></i><i></i><i></i></span><span>DIRECTOR<span class="brand-muted">/OS</span></span></button><nav><button class="demo-btn" id="run-demo">▶ RUN DEMO</button><select id="language" aria-label="Commentary language"><option value="en" ${state.language==='en'?'selected':''}>EN</option><option value="zh" ${state.language==='zh'?'selected':''}>中文</option><option value="es" ${state.language==='es'?'selected':''}>ES</option></select><span class="live-pill"><i></i> MATCH SIMULATION LIVE</span><div class="mode-switch"><button class="mode ${state.mode==='casual'?'on':''}" data-mode="casual">Fan view</button><button class="mode ${state.mode==='analyst'?'on':''}" data-mode="analyst">Analyst view</button></div></nav></header>
+ <header><button id="back-home" class="brand"><span class="brand-mark"><i></i><i></i><i></i></span><span>DIRECTOR<span class="brand-muted">/OS</span></span></button><nav><button class="demo-btn" id="open-real-lab">VIEW CV EVIDENCE</button><button class="demo-btn" id="run-demo">▶ RUN DEMO</button><select id="language" aria-label="Commentary language"><option value="en" ${state.language==='en'?'selected':''}>EN</option><option value="zh" ${state.language==='zh'?'selected':''}>中文</option><option value="es" ${state.language==='es'?'selected':''}>ES</option></select><span class="live-pill"><i></i> ${vision?'REAL VIDEO PLAYING':'EVENT SIMULATION LIVE'}</span><div class="mode-switch"><button class="mode ${state.mode==='casual'?'on':''}" data-mode="casual">Fan view</button><button class="mode ${state.mode==='analyst'?'on':''}" data-mode="analyst">Analyst view</button></div></nav></header>
  <main>
   <section class="hero">
    <div><span class="kicker">AGENTIC MATCH INTELLIGENCE</span><h1>See the match<br><em>your way.</em></h1></div>
@@ -286,12 +272,11 @@ function appHtml() { const last=state.processed[state.processed.length-1]; retur
    <div class="hero-stat"><strong>${String(state.programs.filter(p=>p.active).length).padStart(2,'0')}</strong><span>ACTIVE<br>MONITORS</span></div>
   </section>
   <section class="stage panel">
-   <div class="panel-label"><span>01</span><strong>LIVE MATCH</strong><div class="view-switch"><button class="view-mode ${state.view==='vision'?'on':''}" data-view="vision">VISION</button><button class="view-mode ${state.view==='map'?'on':''}" data-view="map">TACTICAL MAP</button></div><small>Fictional teams · original synthetic visual</small></div>
-   <div class="scoreboard"><div class="club home"><span class="crest">EU</span><div><strong>${MATCH.home.name}</strong><small>HOME</small></div></div><div class="score"><b>${state.score[0]} – ${state.score[1]}</b><span>${fmt(state.time)} · DEMO MATCH</span></div><div class="club away"><div><strong>${MATCH.away.name}</strong><small>AWAY</small></div><span class="crest blue">NC</span></div></div>
+   <div class="panel-label"><span>01</span><strong>${vision?'REAL MATCH VISION':'TACTICAL EVENT MAP'}</strong><div class="view-switch"><button class="view-mode ${state.view==='vision'?'on':''}" data-view="vision">REAL VIDEO</button><button class="view-mode ${state.view==='map'?'on':''}" data-view="map">TACTICAL MAP</button></div><small>${vision?'Pexels licensed footage · genuine model output':'Fictional teams · synthetic event replay'}</small></div>
+   ${vision?'<div class="scoreboard cv-scoreboard"><div class="club home"><span class="crest">CV</span><div><strong>Licensed match feed</strong><small>PUBLIC DEMO</small></div></div><div class="score"><b>YOLO + ByteTrack</b><span>1,078 REAL FRAMES PROCESSED</span></div><div class="club away"><div><strong>Ball coverage</strong><small>795 / 1,078 FRAMES</small></div><span class="crest blue">74%</span></div></div>':`<div class="scoreboard"><div class="club home"><span class="crest">EU</span><div><strong>${MATCH.home.name}</strong><small>HOME</small></div></div><div class="score"><b>${state.score[0]} – ${state.score[1]}</b><span>${fmt(state.time)} · DEMO MATCH</span></div><div class="club away"><div><strong>${MATCH.away.name}</strong><small>AWAY</small></div><span class="crest blue">NC</span></div></div>`}
    ${state.view==='vision'?renderVision():renderPitch()}
    ${sourcePipeline()}
-   <div class="transport"><button id="reset">↺</button><button id="play" class="play">${state.playing?'Ⅱ':'▶'}</button><div class="timeline"><i style="width:${state.time/4.5}%"></i>${events.map(e=>`<span style="left:${e.time/4.5}%"></span>`).join('')}</div><select id="speed"><option ${state.speed===1?'selected':''}>1</option><option ${state.speed===2?'selected':''}>2</option><option ${state.speed===4?'selected':''}>4</option><option value="8" ${state.speed===8?'selected':''}>8</option></select><span>×</span></div>
-   <div class="ticker"><span>LATEST EVENT</span><strong>${last?`${fmt(last.time)} · ${team(last.team).short} · ${eventLabel(last)} · ${last.player}`:'Waiting for kick-off'}</strong></div>
+   ${vision?'<div class="cv-actions"><button id="toggle-cv-video">Ⅱ</button><span><b>WHAT YOU ARE SEEING</b> Every moving box was produced by real inference. BALL labels are COCO sports-ball detections; IDs come from ByteTrack.</span><button id="open-real-lab">VIEW FRAME EVIDENCE →</button></div>':`<div class="transport"><button id="reset">↺</button><button id="play" class="play">${state.playing?'Ⅱ':'▶'}</button><div class="timeline"><i style="width:${state.time/4.5}%"></i>${events.map(e=>`<span style="left:${e.time/4.5}%"></span>`).join('')}</div><select id="speed"><option ${state.speed===1?'selected':''}>1</option><option ${state.speed===2?'selected':''}>2</option><option ${state.speed===4?'selected':''}>4</option><option value="8" ${state.speed===8?'selected':''}>8</option></select><span>×</span></div><div class="ticker"><span>LATEST EVENT</span><strong>${last?`${fmt(last.time)} · ${team(last.team).short} · ${eventLabel(last)} · ${last.player}`:'Waiting for kick-off'}</strong></div>`}
   </section>
   <section class="director panel">
    <div class="panel-label"><span>02</span><strong>DIRECT THE MATCH</strong><small>Describe what matters to you</small></div>
@@ -303,7 +288,7 @@ function appHtml() { const last=state.processed[state.processed.length-1]; retur
   </section>
   <section class="feed panel"><div class="panel-label"><span>03</span><strong>PERSONAL INTELLIGENCE</strong><small>Only the moments that matter</small></div><div class="section-title"><div><h2>Your match, filtered.</h2><p>Verified insights generated from your active monitors.</p></div><span class="count-badge">${String(state.insights.length).padStart(2,'0')}</span></div><div class="feed-list">${state.insights.length?state.insights.map(insightCard).join(''):'<div class="empty-small tall"><span>◎</span><strong>No insights yet</strong><p>Create a monitor, then play the match. The right moments will find you.</p></div>'}</div></section>
   <aside class="evidence panel"><div class="panel-label"><span>04</span><strong>WHY THIS MATTERS</strong><small>Transparent by design</small></div>${evidencePanel()}</aside>
- </main><footer><span>Powered by deterministic event reasoning</span><span>100% SYNTHETIC DATA · EXPLAINABLE BY DESIGN</span></footer>`; }
+ </main><footer><span>Powered by deterministic event reasoning</span><span>${vision?'REAL LICENSED VIDEO · REAL INFERENCE · CANDIDATES LABELLED':'SYNTHETIC EVENT DATA · EXPLAINABLE BY DESIGN'}</span></footer>`; }
 
 function compileCard(c) {
  if(c.status!=='valid') return `<div class="compile-card error"><span>${c.status==='unsupported'?'Unsupported with current data':'Needs clarification'}</span><p>${esc(c.reason)}</p><button class="use-suggestion" data-text="${esc(c.suggestion)}">Use supported alternative</button></div>`;
@@ -314,6 +299,7 @@ function bind() {
  document.querySelector('#play')?.addEventListener('click',togglePlay);
  document.querySelector('#reset')?.addEventListener('click',reset);
  document.querySelector('#speed')?.addEventListener('change',e=>{state.speed=Number(e.target.value)});
+ document.querySelector('#toggle-cv-video')?.addEventListener('click',e=>{const video=document.querySelector('#studio-real-video');if(!video)return;if(video.paused){video.play().catch(()=>{});e.currentTarget.textContent='Ⅱ'}else{video.pause();e.currentTarget.textContent='▶'}});
  document.querySelectorAll('.view-mode').forEach(b=>b.addEventListener('click',()=>{state.view=b.dataset.view;render()}));
  document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>{state.mode=b.dataset.mode;render()}));
  document.querySelector('#director-form')?.addEventListener('submit',async e=>{e.preventDefault();const text=document.querySelector('#intent').value.trim();state.compiling=true;state.compile={original:text};render();state.compile=await compileWithProvider(text);state.compiling=false;render()});
@@ -339,5 +325,13 @@ function bind() {
  document.querySelector('#exit-demo')?.addEventListener('click',()=>{state.demo=false;render()});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&state.overlay){state.overlay=false;render()}},{once:true});
 }
-function render(){ document.querySelector('#app').innerHTML=state.page==='home'?landingPage():state.page==='lab'?realLabPage():appHtml(); bind(); }
+function render(){
+ const priorVideo=document.querySelector('#studio-real-video');
+ const priorTime=priorVideo?.currentTime||0;
+ const priorPlaying=Boolean(priorVideo&&!priorVideo.paused);
+ document.querySelector('#app').innerHTML=state.page==='home'?landingPage():state.page==='lab'?realLabPage():appHtml();
+ bind();
+ const video=document.querySelector('#studio-real-video');
+ if(video){video.currentTime=priorTime;if(priorPlaying||!priorVideo)video.play().catch(()=>{});}
+}
 render();
