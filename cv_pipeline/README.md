@@ -31,6 +31,20 @@ event candidates from the real frames and geometry:
 event confidence and exact source frames/tracks. These remain candidates: the
 adapter does not turn geometric heuristics into asserted action ground truth.
 
+Render those results back onto the real frames for a reviewable 16:9 demo clip:
+
+```bash
+.cv-venv/bin/python cv_pipeline/render_event_overlay.py \
+  --sequence-dir cv_data/soccernet/SNMOT-101 \
+  --events cv_outputs/snmot-101/events.json \
+  --output cv_outputs/snmot-101/event-overlay.mp4
+```
+
+The renderer draws every annotated track, anonymous team role, ball trail and
+event banner with confidence and evidence frame. It exports H.264/yuv420p with
+fast-start metadata so the result is directly playable in a browser. Generated
+clips remain ignored until their redistribution permission is documented.
+
 ## Download one public SoccerNet sequence
 
 The repository includes a range-based downloader that extracts one sequence from SoccerNet's large public ZIP without downloading the entire 5–10 GB archive:

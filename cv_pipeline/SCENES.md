@@ -22,6 +22,11 @@ python cv_pipeline/derive_events.py \
 
 Each event includes its source frame, timestamp, confidence, status, track IDs and the deterministic rule that fired. Team labels are anonymous clusters (`team_a`, `team_b`), not asserted club identities. Officials and atypical kits are held in `other_role` where the clustering separates them.
 
+`render_event_overlay.py` turns the same evidence into a reviewable 1280×720
+H.264 clip. The three local outputs are each 30 seconds and contain 16, 17 and
+10 rendered event candidates respectively; they are deliberately not committed
+with the code.
+
 ## Acceptance gate
 
 - Football-specific player/goalkeeper/referee/ball detector, with model license recorded. The current adapter uses SoccerNet's annotated tracks and explicitly labels its ball choice as a candidate.
