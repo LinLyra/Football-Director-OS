@@ -10,13 +10,23 @@ The public demo should contain three preprocessed clips rather than arbitrary up
 
 Do not assign these stories by clip timestamp alone. The normalized events must be derived from model output, include confidence and frame evidence, and be accepted by the same deterministic Director rule engine used elsewhere.
 
-All three sequences have now been downloaded from the official public tracking subset and processed with the baseline pipeline. `scene-catalog.json` records the measured run statistics and deliberately marks semantic event adapters as pending.
+All three sequences have now been downloaded from the official public tracking subset and processed with the baseline pipeline. `derive_events.py` identifies the persistent small-object ball candidate, clusters kits from real upper-torso pixels, and derives conservative semantic candidates from spatial and temporal evidence. The full generated files stay beside the local video outputs under `cv_outputs/`; `scene-catalog.json` records their measured counts.
+
+Run the event adapter after downloading a sequence:
+
+```bash
+python cv_pipeline/derive_events.py \
+  --sequence-dir cv_data/soccernet/SNMOT-101 \
+  --output cv_outputs/snmot-101/events.json
+```
+
+Each event includes its source frame, timestamp, confidence, status, track IDs and the deterministic rule that fired. Team labels are anonymous clusters (`team_a`, `team_b`), not asserted club identities. Officials and atypical kits are held in `other_role` where the clustering separates them.
 
 ## Acceptance gate
 
-- Football-specific player/goalkeeper/referee/ball detector, with model license recorded.
+- Football-specific player/goalkeeper/referee/ball detector, with model license recorded. The current adapter uses SoccerNet's annotated tracks and explicitly labels its ball choice as a candidate.
 - Stable tracking after camera-motion compensation; report ID switches on an annotated sample.
-- Team clustering validated on at least 50 player crops per scene.
+- Team clustering validated on at least 50 player crops per scene. Current runs use 300+ sampled crops but still need human label validation.
 - Pitch keypoints and homography visually checked.
 - Every semantic event links to the source frames and tracks that caused it.
 - Low-confidence semantic events are labelled candidates or withheld.

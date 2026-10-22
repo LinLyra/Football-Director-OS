@@ -120,7 +120,7 @@ All clubs, players and match events in this repository are fictional and synthet
 
 The Vision view is a transparent product-integration demo: its original synthetic training frame and illustrative track overlays show the contract expected from a detector/tracker, but this repository does **not** claim to run a production player/ball detector in the browser. The deterministic rule engine, evidence ledger and output renderers operate on the included normalized event stream. A real CV service can replace the adapter by emitting the same event schema.
 
-An optional offline [real-video CV pipeline](cv_pipeline/README.md) now runs genuine YOLO inference and ByteTrack tracking, exporting annotated H.264 video, frame-level JSONL tracks and a reproducibility manifest. The committed example manifest records a real 300-frame run. Its current COCO-person baseline is intentionally not wired into the public storyline because ball, team and semantic-event accuracy have not yet passed the documented acceptance gate.
+An optional offline [real-video CV pipeline](cv_pipeline/README.md) now runs genuine YOLO inference and ByteTrack tracking, exporting annotated H.264 video, frame-level JSONL tracks and a reproducibility manifest. For SoccerNet tracking sequences, a second adapter uses annotated tracks plus real-frame kit pixels to produce auditable ball, pressure, progression, possession-change and shot candidates. These candidates are not yet wired into the public storyline and are not presented as action-recognition ground truth; the remaining acceptance gates are documented in [SCENES.md](cv_pipeline/SCENES.md).
 
 ## Submission status
 

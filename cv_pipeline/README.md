@@ -18,6 +18,19 @@ Outputs:
 - `tracks.jsonl`: every detection, confidence, track ID and normalized foot point;
 - `manifest.json`: model, device, performance and explicit limitations.
 
+For a SoccerNet tracking sequence with ground-truth tracks, derive explainable
+event candidates from the real frames and geometry:
+
+```bash
+.cv-venv/bin/python cv_pipeline/derive_events.py \
+  --sequence-dir cv_data/soccernet/SNMOT-101 \
+  --output cv_outputs/snmot-101/events.json
+```
+
+`events.json` records the ball-track selection method, anonymous kit clusters,
+event confidence and exact source frames/tracks. These remain candidates: the
+adapter does not turn geometric heuristics into asserted action ground truth.
+
 ## Download one public SoccerNet sequence
 
 The repository includes a range-based downloader that extracts one sequence from SoccerNet's large public ZIP without downloading the entire 5–10 GB archive:
@@ -30,7 +43,7 @@ The repository includes a range-based downloader that extracts one sequence from
 
 On 21 October 2026, `SNMOT-101` was downloaded from the official `SoccerNet/SN-Tracking-2023` dataset and processed end to end: 750 1080p frames, 6,334 detections and a 14.01 FPS effective MPS rate. See `soccernet-snmot101-manifest.json`. The source frames and generated video remain ignored because dataset access does not by itself establish permission to redistribute match footage through this repository or a public demo.
 
-The default `yolo11n.pt` model detects people and ByteTrack maintains identities. It does not detect the ball or infer passes, shots, team identity or possession. Those claims require a football-specific detector plus event logic and must not be represented as completed until evaluated.
+The default `yolo11n.pt` model detects people and ByteTrack maintains identities. It does not detect the ball or infer passes, shots, team identity or possession. The separate event adapter currently uses SoccerNet's annotated tracks, not YOLO's person-only tracks, and labels all semantic output as candidates. Replacing that dependency still requires a football-specific detector and evaluation.
 
 `example-manifest.json` records an actual 300-frame MPS run completed on 21 October 2026. It proves that the inference/export path executes, while documenting why this baseline is not yet accurate enough for semantic football claims. See `SCENES.md` for the three-clip acceptance gate.
 

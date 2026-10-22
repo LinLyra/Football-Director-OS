@@ -9,11 +9,12 @@
       "title": "Goal threat",
       "story": "An attacking move reaches the penalty area and produces a shot-level threat.",
       "monitor_family": "ORDERED_SEQUENCE",
-      "required_events": ["FINAL_THIRD_ENTRY", "SHOT_CANDIDATE"],
+      "required_events": ["FINAL_THIRD_ENTRY_CANDIDATE", "SHOT_CANDIDATE"],
       "duration_seconds": 30,
       "ground_truth": {"rows": 8767, "track_ids": 25, "small_object_track_frames": 742},
       "baseline_inference": {"detections": 6334, "predicted_track_ids": 142, "effective_fps": 14.01},
-      "status": "tracking-verified_event-adapter-pending"
+      "derived_events": {"total": 16, "shot_candidates": 1, "output": "cv_outputs/snmot-101/events.json"},
+      "status": "tracking-verified_candidate-events-generated"
     },
     {
       "id": "fast-transition",
@@ -21,11 +22,12 @@
       "title": "Fast transition",
       "story": "The phase moves rapidly from penalty-area pressure into an open-field transition.",
       "monitor_family": "ORDERED_SEQUENCE",
-      "required_events": ["POSSESSION_CHANGE_CANDIDATE", "FORWARD_PROGRESSION"],
+      "required_events": ["POSSESSION_CHANGE_CANDIDATE", "RAPID_PROGRESSION_CANDIDATE"],
       "duration_seconds": 30,
       "ground_truth": {"rows": 13396, "track_ids": 24, "small_object_track_frames": 718},
       "baseline_inference": {"detections": 11066, "predicted_track_ids": 183, "effective_fps": 12.59},
-      "status": "tracking-verified_event-adapter-pending"
+      "derived_events": {"total": 17, "possession_change_candidates": 3, "rapid_progression_candidates": 6, "output": "cv_outputs/snmot-068/events.json"},
+      "status": "tracking-verified_candidate-events-generated"
     },
     {
       "id": "pressure-turnover",
@@ -37,7 +39,8 @@
       "duration_seconds": 30,
       "ground_truth": {"rows": 10392, "track_ids": 25, "small_object_track_frames": 579},
       "baseline_inference": {"detections": 7324, "predicted_track_ids": 132, "effective_fps": 13.36},
-      "status": "tracking-verified_event-adapter-pending"
+      "derived_events": {"total": 10, "pressure_candidates": 1, "possession_change_candidates": 1, "output": "cv_outputs/snmot-099/events.json"},
+      "status": "tracking-verified_candidate-events-generated"
     }
   ]
 }

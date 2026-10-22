@@ -1,0 +1,37 @@
+{
+  "schema_version": "1.0",
+  "generated_by": "cv_pipeline/derive_events.py",
+  "disclaimer": "Representative outputs are candidates derived from SoccerNet tracking geometry and real-frame kit pixels, not action-recognition ground truth.",
+  "scenes": [
+    {
+      "sequence": "SNMOT-101",
+      "ball_track_id": 1,
+      "team_cluster_sizes": {"team_a": 11, "team_b": 8, "other_role": 5},
+      "event_counts": {"final_third_entry": 5, "possession_change": 5, "pressure": 1, "rapid_progression": 4, "shot": 1},
+      "story_evidence": [
+        {"type": "RAPID_PROGRESSION_CANDIDATE", "frame": 192, "timestamp_seconds": 7.64, "confidence": 0.74, "ball_track_id": 1, "start_frame": 167, "normalized_displacement": 0.1678},
+        {"type": "SHOT_CANDIDATE", "frame": 600, "timestamp_seconds": 23.96, "confidence": 0.70, "ball_track_id": 1, "start_frame": 595, "normalized_speed_over_5_frames": 0.0751}
+      ]
+    },
+    {
+      "sequence": "SNMOT-068",
+      "ball_track_id": 8,
+      "team_cluster_sizes": {"team_a": 11, "team_b": 9, "other_role": 3},
+      "event_counts": {"final_third_entry": 3, "possession_change": 3, "pressure": 3, "rapid_progression": 6, "shot": 2},
+      "story_evidence": [
+        {"type": "RAPID_PROGRESSION_CANDIDATE", "frame": 26, "timestamp_seconds": 1.0, "confidence": 0.80, "ball_track_id": 8, "start_frame": 1, "normalized_displacement": 0.2545},
+        {"type": "PRESSURE_CANDIDATE", "frame": 117, "timestamp_seconds": 4.64, "confidence": 0.74, "possessor_track_id": 11, "opponent_track_ids": [5, 6]}
+      ]
+    },
+    {
+      "sequence": "SNMOT-099",
+      "ball_track_id": 5,
+      "team_cluster_sizes": {"team_a": 10, "team_b": 7, "other_role": 7},
+      "event_counts": {"final_third_entry": 3, "possession_change": 1, "pressure": 1, "rapid_progression": 3, "shot": 2},
+      "story_evidence": [
+        {"type": "PRESSURE_CANDIDATE", "frame": 496, "timestamp_seconds": 19.8, "confidence": 0.74, "possessor_track_id": 20, "opponent_track_ids": [21, 24], "supporting_frames": [496, 497, 498, 499, 500, 501, 502]},
+        {"type": "POSSESSION_CHANGE_CANDIDATE", "frame": 503, "timestamp_seconds": 20.08, "confidence": 0.85, "from_team_cluster": "team_a", "to_team_cluster": "team_b", "nearest_player_track_id": 21, "stable_frames": 17}
+      ]
+    }
+  ]
+}
