@@ -82,7 +82,7 @@ const state = {
 const isLocalPreview = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 const API_BASE = import.meta.env.VITE_API_BASE_URL || (isLocalPreview ? 'http://127.0.0.1:8000' : '');
 
-function fmt(sec) { return `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`; }
+function fmt(sec) { const whole=Math.floor(sec);return `${String(Math.floor(whole/60)).padStart(2,'0')}:${String(whole%60).padStart(2,'0')}`; }
 function team(id) { return id === 'east' ? MATCH.home : MATCH.away; }
 function esc(s='') { return String(s).replace(/[&<>'"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
 function region(e) { return e.x == null ? '—' : e.x >= 66.7 ? 'Attacking third' : e.x <= 33.3 ? 'Defensive third' : 'Middle third'; }
@@ -299,7 +299,7 @@ function translatedInsight(i) {
 }
 
 function insightCard(i) { const copy=translatedInsight(i); return `<button class="insight-card ${state.selectedInsight===i.id?'selected':''}" data-id="${i.id}">
-  <span class="insight-time">${fmt(i.time)}</span><div><strong>${esc(copy.title)}</strong><p>${esc(copy.text)}</p><small><span class="verified">✓ Verified</span> · ${i.evidence.length} source event${i.evidence.length===1?'':'s'}</small></div>
+  <span class="insight-time">${fmt(i.time)}</span><div><strong>${esc(copy.title)}</strong><p>${esc(copy.text)}</p><small><span class="verified">✓ ${i.candidate?'Evidence-linked candidate':'Verified'}</span> · ${i.evidence.length} source event${i.evidence.length===1?'':'s'}</small></div>
  </button>`; }
 
 function evidencePanel() {
@@ -311,7 +311,7 @@ function evidencePanel() {
   <div class="proof-line"><span>Computation</span><code>${esc(JSON.stringify(i.values))}</code></div>
   <button class="broadcast-btn" id="show-broadcast">OPEN BROADCAST OVERLAY <span>↗</span></button>
   <h4>Supporting events</h4>
-  <div class="evidence-events">${i.evidence.map(e=>`<div><span>${fmt(e.time)}</span><strong>${eventLabel(e)}</strong><small>${e.real?esc(`${e.evidenceText} · confidence ${Math.round(e.confidence*100)}%`):`${esc(e.player)} · ${region(e)} · (${e.x??'—'}, ${e.y??'—'})`}</small><code>${e.id}</code></div>`).join('')}</div>`;
+  <div class="evidence-events">${i.evidence.map(e=>`<div><span>${e.real?`${e.time.toFixed(2)}s`:fmt(e.time)}</span><strong>${eventLabel(e)}</strong><small>${e.real?esc(`${e.evidenceText} · confidence ${Math.round(e.confidence*100)}%`):`${esc(e.player)} · ${region(e)} · (${e.x??'—'}, ${e.y??'—'})`}</small><code>${e.id}</code></div>`).join('')}</div>`;
 }
 
 function demoStep(){return state.view==='vision'?(state.time<1.5?0:state.time<2.45?1:state.insights.length?3:2):(state.time<64?0:state.time<151?1:state.time<232?2:3)}
