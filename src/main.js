@@ -284,22 +284,24 @@ function renderPitch() {
 }
 
 function renderVision() {
+  const moment=state.insights.find(item=>item.directorMoment);
   return `<div class="vision-stage real-feed" aria-label="Real licensed football video processed by YOLO and ByteTrack">
     <video id="studio-real-video" src="/licensed/pexels-15448993/tracked.mp4" autoplay muted loop playsinline preload="auto"></video>
     <div class="vision-vignette"></div>
-    <div class="vision-hud top-left"><span><i></i> REAL CV OUTPUT</span><b>YOLO + BYTETRACK</b></div>
-    <div class="vision-hud top-right"><b>30 FPS WEB</b><b>720P</b><b>PEXELS LICENSED</b></div>
-    <div class="vision-event"><span>10 EVENT CANDIDATES</span><b>73.7% ball-frame coverage</b></div>
+    <div class="vision-hud top-left"><span><i></i> DIRECTOR IS WATCHING</span><b>REAL VIDEO</b></div>
+    <div class="vision-hud top-right"><b>LIVE ANALYSIS</b><b>LICENSED FOOTAGE</b></div>
+    <div class="vision-event"><span>${state.processed.length} MOMENT SIGNALS SEEN</span><b>${state.insights.length?'REPLAY READY':'LOOKING FOR YOUR BRIEF'}</b></div>
+    ${moment?`<div class="moment-callout"><span>✓ MOMENT FOUND</span><strong>Worth a replay</strong><p>Fast ball movement + repeated player involvement</p><button id="replay-moment">PLAY THE MOMENT ↺</button></div>`:''}
     <div class="vision-disclosure">REAL MATCH FOOTAGE · 3,183 PERSON DETECTIONS · 795 BALL FRAMES · LUIS QUINTERO / PEXELS</div>
   </div>`;
 }
 
 function sourcePipeline() {
   return `<div class="source-pipeline">
-    <div><span>01</span><b>REAL VIDEO</b><small>Pexels licensed · 1,078 frames</small></div><i>→</i>
-    <div><span>02</span><b>YOLO + BYTETRACK</b><small>Person + ball tracks</small></div><i>→</i>
-    <div class="live"><span>03</span><b>RULE ENGINE</b><small>Running · deterministic</small></div><i>→</i>
-    <div><span>04</span><b>EVIDENCE</b><small>10 labelled candidates</small></div>
+    <div><span>01</span><b>WATCHES THE VIDEO</b><small>Real licensed match footage</small></div><i>→</i>
+    <div><span>02</span><b>UNDERSTANDS MOVEMENT</b><small>Tracks players and ball</small></div><i>→</i>
+    <div class="live"><span>03</span><b>FINDS THE STORY</b><small>Your brief runs live</small></div><i>→</i>
+    <div><span>04</span><b>PREPARES THE REPLAY</b><small>Clip + commentary + proof</small></div>
   </div>`;
 }
 
@@ -326,15 +328,12 @@ function insightCard(i) { const copy=translatedInsight(i); return `<button class
 
 function evidencePanel() {
   const i=state.insights.find(x=>x.id===state.selectedInsight);
-  if(!i) return `<div class="empty-evidence"><span>◎</span><h3>Evidence, not guesswork</h3><p>When a Director rule fires, the exact source events and computed values appear here.</p></div>`;
+  if(!i) return `<div class="empty-evidence"><span>◎</span><h3>Director is watching</h3><p>When a moment matches your brief, the replay and explanation will appear here automatically.</p></div>`;
   const p=state.programs.find(x=>x.id===i.programId);
-  return `<div class="evidence-head"><div><span class="eyebrow">${i.candidate?'EVIDENCE-LINKED CANDIDATE':'VERIFIED INSIGHT'}</span><h3>${esc(translatedInsight(i).title)}</h3></div><span class="confidence">${i.candidate?'CV grounded':'100% grounded'}</span></div>
-  <div class="proof-line"><span>Rule</span><strong>${esc(p?.summary||'')}</strong></div>
-  <div class="proof-line"><span>Computation</span><code>${esc(JSON.stringify(i.values))}</code></div>
-  ${i.directorMoment?`<div class="director-treatment"><span>DIRECTOR DECISION</span><strong>Use as replay + commentary cue</strong><p>Auto-selected clip: ${i.clipStart.toFixed(2)}s–${i.clipEnd.toFixed(2)}s</p><button id="replay-moment">↺ REPLAY KEY MOMENT</button></div>`:''}
-  <button class="broadcast-btn" id="show-broadcast">OPEN BROADCAST OVERLAY <span>↗</span></button>
-  <h4>Supporting events</h4>
-  <div class="evidence-events">${i.evidence.map(e=>`<div><span>${e.real?`${e.time.toFixed(2)}s`:fmt(e.time)}</span><strong>${eventLabel(e)}</strong><small>${e.real?esc(`${e.evidenceText} · confidence ${Math.round(e.confidence*100)}%`):`${esc(e.player)} · ${region(e)} · (${e.x??'—'}, ${e.y??'—'})`}</small><code>${e.id}</code></div>`).join('')}</div>`;
+  return `<div class="evidence-head human-result"><div><span class="eyebrow">DIRECTOR FOUND A MOMENT</span><h3>${esc(translatedInsight(i).title)}</h3><p>${esc(translatedInsight(i).text)}</p></div></div>
+  ${i.directorMoment?`<div class="director-treatment"><span>READY TO USE</span><strong>A ${Math.round(i.clipEnd-i.clipStart)}-second replay with commentary</strong><p>Selected from ${i.clipStart.toFixed(2)}s to ${i.clipEnd.toFixed(2)}s</p><button id="replay-moment">▶ PLAY KEY MOMENT</button></div>`:''}
+  <button class="broadcast-btn" id="show-broadcast">CREATE LIVE GRAPHIC <span>↗</span></button>
+  <details class="technical-proof"><summary>Why did Director choose this?</summary><p>${esc(p?.summary||'')}</p><code>${esc(JSON.stringify(i.values))}</code><div class="evidence-events">${i.evidence.map(e=>`<div><span>${e.real?`${e.time.toFixed(2)}s`:fmt(e.time)}</span><strong>${eventLabel(e)}</strong><small>${e.real?esc(`${e.evidenceText} · confidence ${Math.round(e.confidence*100)}%`):`${esc(e.player)} · ${region(e)} · (${e.x??'—'}, ${e.y??'—'})`}</small></div>`).join('')}</div></details>`;
 }
 
 function demoStep(){return state.view==='vision'?(state.time<1.5?0:state.time<2.45?1:state.insights.length?3:2):(state.time<64?0:state.time<151?1:state.time<232?2:3)}
@@ -346,13 +345,13 @@ function landingPage(){return `
   <header class="landing-nav"><a class="brand" href="#"><span class="brand-mark"><i></i><i></i><i></i></span><span>DIRECTOR<span class="brand-muted">/OS</span></span></a><div><span class="prototype-pill">LIVE PROTOTYPE</span><button id="open-studio" class="nav-studio">OPEN STUDIO <span>↗</span></button></div></header>
   <main class="landing-main">
    <section class="landing-hero">
-    <div class="landing-copy"><span class="kicker">PERSONALIZED · REAL-TIME · EXPLAINABLE</span><h1>Your match.<br>Your questions.<br><em>Live answers.</em></h1><p>Tell Director what you care about. It watches every event and explains the moment when it happens—without guessing.</p><div class="landing-actions"><button id="run-demo" class="primary-cta"><span>▶</span> WATCH THE 90-SECOND DEMO</button><button id="open-real-lab" class="secondary-cta">OPEN REAL VISION LAB →</button></div><small>INTERACTIVE RULE ENGINE · REAL OFFLINE CV VALIDATION · AUDITABLE EVIDENCE</small></div>
-    <div class="story-card" aria-label="How Director turns a fan request into a verified insight"><div class="story-head"><span><i></i> DIRECTOR IS WATCHING</span><b>LIVE · 03:52</b></div><div class="fan-question"><span>YOU ASKED</span><p>“Tell me when East United's high press starts working.”</p></div><div class="story-flow"><div><i>1</i><span>Understands your question</span></div><b>→</b><div><i>2</i><span>Watches every event</span></div><b>→</b><div class="active"><i>3</i><span>Explains the moment</span></div></div><div class="answer-card"><span class="verified-mark">✓ VERIFIED INSIGHT</span><h2>The high press is working.</h2><p>East United recovered possession in the attacking third three times in five minutes.</p><div class="evidence-dots"><span>01:04 · Recovery</span><span>02:31 · Recovery</span><span>03:52 · Recovery</span></div></div></div>
+    <div class="landing-copy"><span class="kicker">AN AI DIRECTOR FOR EVERY VIEWER</span><h1>Tell us what matters.<br><em>We find the moment.</em></h1><p>Director watches a real football video, finds the passage that matches your request, and prepares a replay with commentary—automatically.</p><div class="landing-actions"><button id="run-demo" class="primary-cta"><span>▶</span> SEE A REAL EXAMPLE</button><button id="open-real-lab" class="secondary-cta">HOW THE VIDEO WAS ANALYSED →</button></div><small>REAL LICENSED VIDEO · AUTOMATIC MOMENT SELECTION · EXPLAINABLE RESULTS</small></div>
+    <div class="story-card" aria-label="How Director finds a replay-worthy moment"><div class="story-head"><span><i></i> ONE SIMPLE BRIEF</span><b>REAL VIDEO</b></div><div class="fan-question"><span>YOU ASK</span><p>“Find a high-tempo passage worth replaying.”</p></div><div class="story-flow"><div><i>1</i><span>Watches the video</span></div><b>→</b><div><i>2</i><span>Finds the pattern</span></div><b>→</b><div class="active"><i>3</i><span>Prepares the replay</span></div></div><div class="answer-card"><span class="verified-mark">✓ MOMENT FOUND</span><h2>Here is the replay.</h2><p>Rapid ball movement was followed by repeated player involvement.</p><div class="evidence-dots"><span>6-second clip</span><span>Commentary ready</span><span>Evidence attached</span></div></div></div>
    </section>
-   <section class="value-strip"><span>ONE QUESTION</span><b>→</b><span>LIVE EVENT MONITOR</span><b>→</b><span>VERIFIED INSIGHT</span><b>→</b><span>BROADCAST-READY STORY</span></section>
-   <section class="landing-proof"><div><span class="proof-num">01</span><h3>Ask naturally</h3><p>No dashboards to configure. Describe the moment you care about in plain language.</p></div><div><span class="proof-num">02</span><h3>Trust the answer</h3><p>Every insight links to the exact events, timestamps and calculations that triggered it.</p></div><div><span class="proof-num">03</span><h3>Tell it your way</h3><p>Switch audience, language and output—from fan explanation to live broadcast graphics.</p></div></section>
+   <section class="value-strip"><span>YOUR BRIEF</span><b>→</b><span>DIRECTOR WATCHES</span><b>→</b><span>KEY MOMENT FOUND</span><b>→</b><span>REPLAY READY</span></section>
+   <section class="landing-proof"><div><span class="proof-num">01</span><h3>Say what you want</h3><p>Ask for a high-tempo passage, rapid movement, or another supported pattern.</p></div><div><span class="proof-num">02</span><h3>Get the moment</h3><p>Director selects the exact clip and explains in plain language what it observed.</p></div><div><span class="proof-num">03</span><h3>Use it instantly</h3><p>Replay it, change language, or turn it into a live broadcast graphic.</p></div></section>
    <section class="landing-final"><span>BUILT FOR THE MICROSOFT × PREMIER LEAGUE HACKATHON</span><h2>Football intelligence should feel personal.<br><em>And prove every word.</em></h2><button id="run-demo" class="primary-cta"><span>▶</span> SEE IT IN ACTION</button></section>
-  </main><footer class="landing-footer"><span>DIRECTOR/OS · AGENTIC MATCH INTELLIGENCE</span><span>SYNTHETIC DATA · DETERMINISTIC EXECUTION · EXPLAINABLE OUTPUT</span></footer>
+  </main><footer class="landing-footer"><span>DIRECTOR/OS · AGENTIC MATCH INTELLIGENCE</span><span>REAL LICENSED VIDEO · EVIDENCE-LINKED OUTPUT</span></footer>
  </div>`}
 
 function realLabPage(){const selected=REAL_SCENES[0];return `
@@ -373,27 +372,27 @@ function appHtml() { const last=state.processed[state.processed.length-1]; const
  <header><button id="back-home" class="brand"><span class="brand-mark"><i></i><i></i><i></i></span><span>DIRECTOR<span class="brand-muted">/OS</span></span></button><nav><button class="demo-btn" id="open-real-lab">VIEW CV EVIDENCE</button><button class="demo-btn" id="run-demo">▶ RUN DEMO</button><select id="language" aria-label="Commentary language"><option value="en" ${state.language==='en'?'selected':''}>EN</option><option value="zh" ${state.language==='zh'?'selected':''}>中文</option><option value="es" ${state.language==='es'?'selected':''}>ES</option></select><span class="live-pill"><i></i> ${vision?'REAL VIDEO PLAYING':'EVENT SIMULATION LIVE'}</span><div class="mode-switch"><button class="mode ${state.mode==='casual'?'on':''}" data-mode="casual">Fan view</button><button class="mode ${state.mode==='analyst'?'on':''}" data-mode="analyst">Analyst view</button></div></nav></header>
  <main>
   <section class="hero">
-   <div><span class="kicker">AGENTIC MATCH INTELLIGENCE</span><h1>See the match<br><em>your way.</em></h1></div>
-   <p>Turn a sentence into a live, explainable match monitor. Every insight is traced back to the exact events that caused it.</p>
-   <div class="hero-stat"><strong>${String(state.programs.filter(p=>p.active).length).padStart(2,'0')}</strong><span>ACTIVE<br>MONITORS</span></div>
+   <div><span class="kicker">YOUR AI MATCH DIRECTOR</span><h1>Ask once.<br><em>Get the moment.</em></h1></div>
+   <p>Director is watching the real video below. When it finds a passage matching your brief, it prepares the replay and commentary for you.</p>
+   <div class="hero-stat"><strong>${state.insights.length?'✓':'•'}</strong><span>${state.insights.length?'MOMENT':'WATCHING'}<br>${state.insights.length?'FOUND':'LIVE'}</span></div>
   </section>
   <section class="stage panel">
-   <div class="panel-label"><span>01</span><strong>${vision?'REAL MATCH VISION':'TACTICAL EVENT MAP'}</strong><div class="view-switch"><button class="view-mode ${state.view==='vision'?'on':''}" data-view="vision">REAL VIDEO</button><button class="view-mode ${state.view==='map'?'on':''}" data-view="map">TACTICAL MAP</button></div><small>${vision?'Pexels licensed footage · genuine model output':'Fictional teams · synthetic event replay'}</small></div>
-   ${vision?'<div class="scoreboard cv-scoreboard"><div class="club home"><span class="crest">CV</span><div><strong>Licensed match feed</strong><small>PUBLIC DEMO</small></div></div><div class="score"><b>YOLO + ByteTrack</b><span>1,078 REAL FRAMES PROCESSED</span></div><div class="club away"><div><strong>Ball coverage</strong><small>795 / 1,078 FRAMES</small></div><span class="crest blue">74%</span></div></div>':`<div class="scoreboard"><div class="club home"><span class="crest">EU</span><div><strong>${MATCH.home.name}</strong><small>HOME</small></div></div><div class="score"><b>${state.score[0]} – ${state.score[1]}</b><span>${fmt(state.time)} · DEMO MATCH</span></div><div class="club away"><div><strong>${MATCH.away.name}</strong><small>AWAY</small></div><span class="crest blue">NC</span></div></div>`}
+   <div class="panel-label"><span>01</span><strong>${vision?'WATCH THE MATCH':'TACTICAL SANDBOX'}</strong><div class="view-switch"><button class="view-mode ${state.view==='vision'?'on':''}" data-view="vision">REAL VIDEO</button><button class="view-mode ${state.view==='map'?'on':''}" data-view="map">TACTICAL MAP</button></div><small>${vision?'Director is analysing this video as it plays':'Optional synthetic event replay'}</small></div>
+   ${vision?'<div class="scoreboard cv-scoreboard"><div class="club home"><span class="crest">▶</span><div><strong>Real football video</strong><small>LICENSED PUBLIC DEMO</small></div></div><div class="score"><b>Director is watching</b><span>FINDING THE MOMENT YOU ASKED FOR</span></div><div class="club away"><div><strong>18-second example</strong><small>AUTOMATIC REPLAY SELECTION</small></div><span class="crest blue">AI</span></div></div>':`<div class="scoreboard"><div class="club home"><span class="crest">EU</span><div><strong>${MATCH.home.name}</strong><small>HOME</small></div></div><div class="score"><b>${state.score[0]} – ${state.score[1]}</b><span>${fmt(state.time)} · DEMO MATCH</span></div><div class="club away"><div><strong>${MATCH.away.name}</strong><small>AWAY</small></div><span class="crest blue">NC</span></div></div>`}
    ${state.view==='vision'?renderVision():renderPitch()}
    ${sourcePipeline()}
-   ${vision?`<div class="cv-actions"><button id="toggle-cv-video">Ⅱ</button><span><b>${last?`LIVE EVENT · ${fmt(last.time)} · ${eventLabel(last)}`:'WAITING FOR FIRST CV EVENT'}</b> ${last?esc(last.evidenceText):'The 10 saved model events enter the rule engine at their exact video timestamps.'}</span><button id="open-real-lab">VIEW FRAME EVIDENCE →</button></div>`:`<div class="transport"><button id="reset">↺</button><button id="play" class="play">${state.playing?'Ⅱ':'▶'}</button><div class="timeline"><i style="width:${state.time/4.5}%"></i>${events.map(e=>`<span style="left:${e.time/4.5}%"></span>`).join('')}</div><select id="speed"><option ${state.speed===1?'selected':''}>1</option><option ${state.speed===2?'selected':''}>2</option><option ${state.speed===4?'selected':''}>4</option><option value="8" ${state.speed===8?'selected':''}>8</option></select><span>×</span></div><div class="ticker"><span>LATEST EVENT</span><strong>${last?`${fmt(last.time)} · ${team(last.team).short} · ${eventLabel(last)} · ${last.player}`:'Waiting for kick-off'}</strong></div>`}
+   ${vision?`<div class="cv-actions"><button id="toggle-cv-video">Ⅱ</button><span><b>${state.insights.length?'KEY MOMENT FOUND':last?'DIRECTOR NOTICED A SIGNAL':'DIRECTOR IS WATCHING'}</b> ${state.insights.length?'A replay matching your brief is ready below.':last?'It is combining movement over time before choosing a replay.':'Keep watching—the result will appear automatically.'}</span><button id="open-real-lab">SEE TECHNICAL PROOF →</button></div>`:`<div class="transport"><button id="reset">↺</button><button id="play" class="play">${state.playing?'Ⅱ':'▶'}</button><div class="timeline"><i style="width:${state.time/4.5}%"></i>${events.map(e=>`<span style="left:${e.time/4.5}%"></span>`).join('')}</div><select id="speed"><option ${state.speed===1?'selected':''}>1</option><option ${state.speed===2?'selected':''}>2</option><option ${state.speed===4?'selected':''}>4</option><option value="8" ${state.speed===8?'selected':''}>8</option></select><span>×</span></div><div class="ticker"><span>LATEST EVENT</span><strong>${last?`${fmt(last.time)} · ${team(last.team).short} · ${eventLabel(last)} · ${last.player}`:'Waiting for kick-off'}</strong></div>`}
   </section>
   <section class="director panel">
-   <div class="panel-label"><span>02</span><strong>${vision?'DIRECT THE REAL FEED':'DIRECT THE MATCH'}</strong><small>Describe what matters to you</small></div>
-   <div class="director-intro"><div><h2>What should I watch for?</h2><p>Use natural language. Director turns it into a precise monitor that runs against the live event stream.</p></div><span class="engine"><i></i> READY</span></div>
+   <div class="panel-label"><span>02</span><strong>YOUR BRIEF</strong><small>Tell Director what is worth finding</small></div>
+   <div class="director-intro"><div><h2>What moment do you want?</h2><p>Write it normally. Director will watch the video and bring back the matching passage.</p></div><span class="engine"><i></i> WATCHING</span></div>
    <form id="director-form"><div class="prompt-shell"><span class="prompt-mark">↳</span><textarea id="intent" rows="3" placeholder="e.g. Alert me when two ball contacts occur…">${esc(state.compile?.original||availableTemplates[0])}</textarea><button type="submit" ${state.compiling?'disabled':''}>${state.compiling?'<span class="spinner"></span> VALIDATING':'CREATE MONITOR <span>→</span>'}</button></div><div class="example-row"><span>Try:</span>${availableTemplates.slice(1,4).map((t,i)=>`<button type="button" class="example-chip" data-text="${esc(t)}">${vision?['Rapid movement','80% confidence'][i]:['Player watch','Fast transitions','Shot surge'][i]}</button>`).join('')}<small>⌘ ENTER</small></div></form>
    ${state.compile?compileCard(state.compile):''}
-   <div class="subhead"><h3>Live monitors</h3><span>${state.programs.filter(p=>p.active).length} RUNNING</span></div>
+   <div class="subhead"><h3>What Director is looking for</h3><span>${state.programs.filter(p=>p.active).length?'ACTIVE':'NOT STARTED'}</span></div>
    <div class="program-list">${state.programs.length?state.programs.map(programCard).join(''):'<div class="empty-small">Compile a direction to start monitoring the match.</div>'}</div>
   </section>
-  <section class="feed panel"><div class="panel-label"><span>03</span><strong>PERSONAL INTELLIGENCE</strong><small>Only the moments that matter</small></div><div class="section-title"><div><h2>Your match, filtered.</h2><p>Verified insights generated from your active monitors.</p></div><span class="count-badge">${String(state.insights.length).padStart(2,'0')}</span></div><div class="feed-list">${state.insights.length?state.insights.map(insightCard).join(''):'<div class="empty-small tall"><span>◎</span><strong>No insights yet</strong><p>Create a monitor, then play the match. The right moments will find you.</p></div>'}</div></section>
-  <aside class="evidence panel"><div class="panel-label"><span>04</span><strong>WHY THIS MATTERS</strong><small>Transparent by design</small></div>${evidencePanel()}</aside>
+  <section class="feed panel"><div class="panel-label"><span>03</span><strong>DIRECTOR'S PICKS</strong><small>The moments matching your brief</small></div><div class="section-title"><div><h2>${state.insights.length?'A moment is ready.':'Watching for your moment…'}</h2><p>${state.insights.length?'Select it to replay, explain or publish.':'The result will appear automatically—no button needed.'}</p></div><span class="count-badge">${String(state.insights.length).padStart(2,'0')}</span></div><div class="feed-list">${state.insights.length?state.insights.map(insightCard).join(''):'<div class="empty-small tall"><span>◎</span><strong>Director is watching</strong><p>Keep the video playing. A matching moment will appear here.</p></div>'}</div></section>
+  <aside class="evidence panel"><div class="panel-label"><span>04</span><strong>USE THIS MOMENT</strong><small>Replay, explain or publish</small></div>${evidencePanel()}</aside>
  </main><footer><span>Powered by deterministic event reasoning</span><span>${vision?'REAL LICENSED VIDEO · REAL INFERENCE · CANDIDATES LABELLED':'SYNTHETIC EVENT DATA · EXPLAINABLE BY DESIGN'}</span></footer>`; }
 
 function compileCard(c) {
@@ -422,7 +421,7 @@ function bind() {
  document.querySelectorAll('.example-chip').forEach(b=>b.addEventListener('click',()=>{const input=document.querySelector('#intent');input.value=b.dataset.text;input.focus()}));
  document.querySelector('#language')?.addEventListener('change',e=>{state.language=e.target.value;render()});
  document.querySelector('#show-broadcast')?.addEventListener('click',()=>{state.overlay=true;render()});
- document.querySelector('#replay-moment')?.addEventListener('click',()=>{const insight=state.insights.find(item=>item.id===state.selectedInsight);const video=document.querySelector('#studio-real-video');if(insight&&video){state.replayUntil=insight.clipEnd;video.currentTime=insight.clipStart;video.play().catch(()=>{})}});
+ document.querySelectorAll('#replay-moment').forEach(button=>button.addEventListener('click',()=>{const insight=state.insights.find(item=>item.id===state.selectedInsight);const video=document.querySelector('#studio-real-video');if(insight&&video){state.replayUntil=insight.clipEnd;video.currentTime=insight.clipStart;video.play().catch(()=>{})}}));
  document.querySelector('#close-broadcast')?.addEventListener('click',()=>{state.overlay=false;render()});
  document.querySelectorAll('#run-demo').forEach(b=>b.addEventListener('click',()=>enterRealStudio(true)));
  document.querySelectorAll('#open-studio').forEach(b=>b.addEventListener('click',()=>enterRealStudio(false)));
