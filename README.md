@@ -2,7 +2,7 @@
 
 > Your match. Your questions. Live answers.
 
-Football Director OS turns a fan's natural-language question into a live, explainable match monitor. It watches a synthetic football event stream, detects the requested pattern deterministically, and produces audience-specific commentary, evidence and broadcast-ready output.
+Football Director OS turns a fan's natural-language question into a live, explainable match director. The primary public demo replays genuine CV output from licensed football footage, composes low-level candidates into an evidence-bounded key moment, and produces audience-specific commentary, replay selection and broadcast-ready output.
 
 Built for the **Microsoft × Premier League Inside the Game Developer Hackathon**.
 
@@ -12,27 +12,26 @@ Every viewer cares about something different, but traditional broadcasts give ev
 
 ## Demo flow
 
-1. Ask: `Alert me when East United wins possession in the attacking third three times within five minutes.`
+1. Ask: `Find a high-tempo passage with rapid ball travel and repeated player involvement.`
 2. Director compiles the request into a constrained monitoring program.
-3. The deterministic temporal engine evaluates the live event stream.
-4. When the pattern occurs, Director explains why it matters.
-5. The exact source events, timestamps and computation remain available for audit.
-6. The verified insight can be rendered for fans, analysts or live broadcast in English, Chinese or Spanish.
+3. Ten timestamped candidates from the licensed CV run enter the deterministic temporal engine as the video plays.
+4. A composite window selects a high-tempo passage without claiming unsupported actions such as a shot or goal.
+5. Director creates a replay range, commentary cue and broadcast overlay.
+6. The exact source events, tracks, timestamps, confidence and computation remain available for audit in English, Chinese or Spanish.
 
 Use **Watch the 90-second demo** on the homepage for the guided experience. See [DEMO_SCRIPT.md](DEMO_SCRIPT.md) for the submission-video script.
 
-The homepage also opens a **Real Vision Lab**. Its public scene runs genuine
-YOLO + ByteTrack inference on an 18-second Pexels-licensed football clip and
-shows evidence-linked ball-contact candidates. Three additional SoccerNet
-tracking scenes—goal threat, fast transition, and pressure-to-turnover—remain
-available for local research validation without redistributing their footage.
-Run `npm run prepare:demo-assets` to enable those additional local scenes.
+The homepage also opens a **Real Vision Lab**. Its public scene shows the genuine
+YOLO + ByteTrack output for an 18-second Pexels-licensed football clip, all ten
+derived candidates, their confidence and their frame/track evidence.
 
 ## Features
 
-- synthetic event-stream replay with passes, shots, tackles, recoveries and pressure;
-- original synthetic broadcast-style training visual with an explicit CV-adapter overlay;
-- three-scene real-video validation lab with frame/track evidence and candidate confidence;
+- licensed real-video replay with genuine person/ball detections;
+- ten timestamp-synchronized ball-contact and rapid-movement candidates;
+- evidence-bounded semantic composition into a high-tempo Director moment;
+- automatic replay-range selection and commentary cue;
+- optional synthetic event-stream sandbox with passes, shots, tackles, recoveries and pressure;
 - natural-language monitoring instructions;
 - count-threshold, player-event and ordered-sequence detection;
 - rising-edge and cooldown duplicate suppression;
@@ -57,9 +56,10 @@ Microsoft Foundry / deterministic fallback
 Validated monitoring DSL
         |
         v
-Temporal rule engine <--- synthetic live event stream
+Temporal rule engine <--- timestamped real CV event replay
         |
-        +----> evidence ledger
+        +----> semantic moment composer
+        +----> replay selection + evidence ledger
         +----> fan / analyst narrative
         +----> multilingual broadcast overlay
 ```
@@ -124,9 +124,9 @@ The public frontend uses the deterministic browser compiler when `VITE_API_BASE_
 
 ## Data and rights
 
-All clubs, players and match events in this repository are fictional and synthetic. The project includes no Premier League match footage, official club marks, proprietary event feeds, copyrighted music or redistributed sports data.
+The public real-video demo uses a Pexels-licensed clip credited to Luis Quintero. It includes no Premier League match footage, official club marks, proprietary event feeds or copyrighted music. The separate tactical sandbox uses fictional clubs, players and synthetic events.
 
-The Vision view is a transparent product-integration demo: its original synthetic training frame and illustrative track overlays show the contract expected from a detector/tracker, but this repository does **not** claim to run a production player/ball detector in the browser. The deterministic rule engine, evidence ledger and output renderers operate on the included normalized event stream. A real CV service can replace the adapter by emitting the same event schema.
+CV inference is run offline and its normalized output is committed for reproducible judging; the browser does not rerun YOLO. During playback, the saved events are streamed at their exact video timestamps through the same deterministic rule engine, semantic composer, evidence ledger and output renderers. Semantic outputs remain explicitly labelled as candidates and never claim unsupported ground truth.
 
 An optional offline [real-video CV pipeline](cv_pipeline/README.md) now runs genuine YOLO inference and ByteTrack tracking, exporting annotated H.264 video, frame-level JSONL tracks and a reproducibility manifest. For SoccerNet tracking sequences, a second adapter uses annotated tracks plus real-frame kit pixels to produce auditable ball, pressure, progression, possession-change and shot candidates. These candidates are not yet wired into the public storyline and are not presented as action-recognition ground truth; the remaining acceptance gates are documented in [SCENES.md](cv_pipeline/SCENES.md).
 

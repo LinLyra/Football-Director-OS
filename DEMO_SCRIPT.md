@@ -11,7 +11,7 @@ The spoken submission should be in English. Chinese production notes are include
 3. Open the public, signed-out judging URL—not localhost.
 4. Confirm the homepage starts at the top.
 5. Confirm **Watch the 90-second demo** works from a fresh reload.
-6. Record without copyrighted music, match footage or official club marks.
+6. Confirm the licensed tracked video loads and starts automatically.
 7. Use a steady cursor and pause briefly after every important visual change.
 
 ## 0:00–0:12 — Problem and promise
@@ -36,7 +36,7 @@ Click **Watch the 90-second demo**. The Studio opens with the monitoring request
 
 ### Narration
 
-> I ask Director to alert me when East United wins possession in the attacking third three times within five minutes.
+> I ask Director to find a high-tempo passage with rapid ball travel and repeated player involvement.
 
 ### 中文提示
 
@@ -46,7 +46,7 @@ Click **Watch the 90-second demo**. The Studio opens with the monitoring request
 
 ### Screen
 
-Point to the natural-language request and then the active monitor. Briefly show **View program** only if timing allows.
+Point to the natural-language request and the active composite monitor. Briefly show **View program** only if timing allows.
 
 ### Narration
 
@@ -60,29 +60,29 @@ Point to the natural-language request and then the active monitor. Briefly show 
 
 ### Screen
 
-Let the accelerated synthetic replay run. Point out the three possession recoveries appearing on the pitch. Do not cut before the third recovery.
+Let the licensed video run. Point out that the event ticker changes at the exact CV timestamps. Do not cut before the Director moment appears at roughly 4.65 seconds.
 
 ### Narration
 
-> The monitor evaluates a synthetic live event stream continuously. It waits for three qualifying recoveries, suppresses duplicate alerts, and never invents missing evidence.
+> Ten candidates from the real CV run enter the rule engine at their exact video timestamps. Director combines rapid ball travel with repeated player involvement, while avoiding unsupported claims such as a shot or goal.
 
 ### 中文提示
 
-保留球场事件点和顶部演示步骤。第三个夺回球权发生后，洞察会自动出现。
+保留真实视频和顶部演示步骤。约 4.65 秒时，高节奏片段会自动出现。
 
 ## 0:59–1:17 — Explainability
 
 ### Screen
 
-Pause after the insight appears. Select **High press is producing turnovers** and show the evidence inspector with all three timestamps and event IDs.
+After the insight appears, show **High-tempo passage selected**, its Director Decision card, clip range and the supporting event IDs. Click **Replay Key Moment** once.
 
 ### Narration
 
-> When the pattern is complete, Director explains why it matters. Every conclusion is auditable: here are the exact timestamps, locations, event IDs and rolling-window calculation behind the narrative.
+> When the pattern is complete, Director selects a replay range and prepares a commentary cue. Every word is auditable through the exact timestamps, track IDs, confidence values and composite-window calculation.
 
 ### 中文提示
 
-必须清晰拍到 `01:04`、`02:31`、`03:52` 三条证据和 `count: 3`。
+必须清晰拍到 `1.57s`、`2.45s`、`4.65s` 的证据、计算结果和自动回放区间。
 
 ## 1:17–1:34 — Personalization
 
@@ -116,13 +116,13 @@ Click **Open Broadcast Overlay**. End on the full-screen Chinese broadcast graph
 
 > Every football fan watches the same match, but cares about different moments. Football Director OS turns each viewer's question into live, explainable match intelligence.
 >
-> I ask Director to alert me when East United wins possession in the attacking third three times within five minutes.
+> I ask Director to find a high-tempo passage with rapid ball travel and repeated player involvement.
 >
 > An AI provider can translate that request into a constrained monitoring program. The program is validated locally, and deterministic code—not the model—decides whether the event actually happened.
 >
-> The monitor evaluates a synthetic live event stream continuously. It waits for three qualifying recoveries, suppresses duplicate alerts, and never invents missing evidence.
+> Ten candidates from the real CV run enter the rule engine at their exact video timestamps. Director combines rapid ball travel with repeated player involvement, while avoiding unsupported claims such as a shot or goal.
 >
-> When the pattern is complete, Director explains why it matters. Every conclusion is auditable: here are the exact timestamps, locations, event IDs and rolling-window calculation behind the narrative.
+> When the pattern is complete, Director selects a replay range and prepares a commentary cue. Every word is auditable through the exact timestamps, track IDs, confidence values and composite-window calculation.
 >
 > The verified fact stays the same, while the experience changes for a casual fan, a tactical analyst, or a global audience in another language.
 >
@@ -133,8 +133,9 @@ Click **Open Broadcast Overlay**. End on the full-screen Chinese broadcast graph
 - [ ] Final runtime below 1:55.
 - [ ] Homepage headline visible at the beginning.
 - [ ] Natural-language request clearly readable.
-- [ ] Three recovery events visibly trigger the insight.
-- [ ] Evidence panel and `count: 3` visible.
+- [ ] Real video and timestamped event ticker are visible.
+- [ ] High-tempo passage is triggered at approximately 4.65 seconds.
+- [ ] Director Decision, replay range and three supporting events are visible.
 - [ ] Fan/Analyst change visible.
 - [ ] Chinese commentary visible.
 - [ ] Broadcast overlay fills the closing frame.
