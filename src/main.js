@@ -36,10 +36,25 @@ const templates = [
   'Tell me when the left-back is leaving too much space behind him.'
 ];
 
+const REAL_SCENES = [
+  {id:'snmot-101', sequence:'SNMOT-101', title:'Goal threat', story:'Rapid progression produces a shot-level threat.', video:'/demo-scenes/snmot-101.mp4', ball:1, tracks:'11 : 8', events:16, moments:[
+    {time:7.64,type:'RAPID PROGRESSION',confidence:.74,evidence:'Ball track 1 · frames 167–192 · displacement 0.1678'},
+    {time:23.96,type:'SHOT CANDIDATE',confidence:.70,evidence:'Ball track 1 · frames 595–600 · speed 0.0751'},
+  ]},
+  {id:'snmot-068', sequence:'SNMOT-068', title:'Fast transition', story:'The phase opens into a rapid end-to-end transition.', video:'/demo-scenes/snmot-068.mp4', ball:8, tracks:'11 : 9', events:17, moments:[
+    {time:1.00,type:'RAPID PROGRESSION',confidence:.80,evidence:'Ball track 8 · frames 1–26 · displacement 0.2545'},
+    {time:4.64,type:'PRESSURE CANDIDATE',confidence:.74,evidence:'Possessor P11 · opponents P5 + P6 · 7 supporting frames'},
+  ]},
+  {id:'snmot-099', sequence:'SNMOT-099', title:'Pressure → turnover', story:'Sustained pressure is followed by a stable possession change.', video:'/demo-scenes/snmot-099.mp4', ball:5, tracks:'10 : 7', events:10, moments:[
+    {time:19.80,type:'PRESSURE CANDIDATE',confidence:.74,evidence:'Possessor P20 · opponents P21 + P24 · 7 supporting frames'},
+    {time:20.08,type:'POSSESSION CHANGE',confidence:.85,evidence:'Team A → Team B · nearest P21 · stable for 17 frames'},
+  ]},
+];
+
 const state = {
   time: 0, speed: 2, playing: false, timer: null, cursor: 0, score: [0,0],
   mode: 'casual', selectedInsight: null, compile: null, compiling: false,
-  programs: [], insights: [], processed: [], language:'en', overlay:false, demo:false, page:'home', view:'vision',
+  programs: [], insights: [], processed: [], language:'en', overlay:false, demo:false, page:'home', view:'vision', realScene:'snmot-101',
 };
 
 const isLocalPreview = ['localhost', '127.0.0.1'].includes(window.location.hostname);
@@ -235,13 +250,26 @@ function landingPage(){return `
   <header class="landing-nav"><a class="brand" href="#"><span class="brand-mark"><i></i><i></i><i></i></span><span>DIRECTOR<span class="brand-muted">/OS</span></span></a><div><span class="prototype-pill">LIVE PROTOTYPE</span><button id="open-studio" class="nav-studio">OPEN STUDIO <span>↗</span></button></div></header>
   <main class="landing-main">
    <section class="landing-hero">
-    <div class="landing-copy"><span class="kicker">PERSONALIZED · REAL-TIME · EXPLAINABLE</span><h1>Your match.<br>Your questions.<br><em>Live answers.</em></h1><p>Tell Director what you care about. It watches every event and explains the moment when it happens—without guessing.</p><div class="landing-actions"><button id="run-demo" class="primary-cta"><span>▶</span> WATCH THE 90-SECOND DEMO</button><button id="open-studio" class="secondary-cta">TRY IT YOURSELF →</button></div><small>NO SETUP · SYNTHETIC MATCH DATA · FULLY INTERACTIVE</small></div>
+    <div class="landing-copy"><span class="kicker">PERSONALIZED · REAL-TIME · EXPLAINABLE</span><h1>Your match.<br>Your questions.<br><em>Live answers.</em></h1><p>Tell Director what you care about. It watches every event and explains the moment when it happens—without guessing.</p><div class="landing-actions"><button id="run-demo" class="primary-cta"><span>▶</span> WATCH THE 90-SECOND DEMO</button><button id="open-real-lab" class="secondary-cta">OPEN REAL VISION LAB →</button></div><small>INTERACTIVE RULE ENGINE · REAL OFFLINE CV VALIDATION · AUDITABLE EVIDENCE</small></div>
     <div class="story-card" aria-label="How Director turns a fan request into a verified insight"><div class="story-head"><span><i></i> DIRECTOR IS WATCHING</span><b>LIVE · 03:52</b></div><div class="fan-question"><span>YOU ASKED</span><p>“Tell me when East United's high press starts working.”</p></div><div class="story-flow"><div><i>1</i><span>Understands your question</span></div><b>→</b><div><i>2</i><span>Watches every event</span></div><b>→</b><div class="active"><i>3</i><span>Explains the moment</span></div></div><div class="answer-card"><span class="verified-mark">✓ VERIFIED INSIGHT</span><h2>The high press is working.</h2><p>East United recovered possession in the attacking third three times in five minutes.</p><div class="evidence-dots"><span>01:04 · Recovery</span><span>02:31 · Recovery</span><span>03:52 · Recovery</span></div></div></div>
    </section>
    <section class="value-strip"><span>ONE QUESTION</span><b>→</b><span>LIVE EVENT MONITOR</span><b>→</b><span>VERIFIED INSIGHT</span><b>→</b><span>BROADCAST-READY STORY</span></section>
    <section class="landing-proof"><div><span class="proof-num">01</span><h3>Ask naturally</h3><p>No dashboards to configure. Describe the moment you care about in plain language.</p></div><div><span class="proof-num">02</span><h3>Trust the answer</h3><p>Every insight links to the exact events, timestamps and calculations that triggered it.</p></div><div><span class="proof-num">03</span><h3>Tell it your way</h3><p>Switch audience, language and output—from fan explanation to live broadcast graphics.</p></div></section>
    <section class="landing-final"><span>BUILT FOR THE MICROSOFT × PREMIER LEAGUE HACKATHON</span><h2>Football intelligence should feel personal.<br><em>And prove every word.</em></h2><button id="run-demo" class="primary-cta"><span>▶</span> SEE IT IN ACTION</button></section>
   </main><footer class="landing-footer"><span>DIRECTOR/OS · AGENTIC MATCH INTELLIGENCE</span><span>SYNTHETIC DATA · DETERMINISTIC EXECUTION · EXPLAINABLE OUTPUT</span></footer>
+ </div>`}
+
+function realLabPage(){const selected=REAL_SCENES.find(scene=>scene.id===state.realScene)||REAL_SCENES[0];return `
+ <div class="real-lab">
+  <header><button id="back-home" class="brand"><span class="brand-mark"><i></i><i></i><i></i></span><span>DIRECTOR<span class="brand-muted">/OS</span></span></button><nav><span class="lab-pill"><i></i> REAL VISION LAB</span><button id="open-studio" class="nav-studio">OPEN SYNTHETIC STUDIO ↗</button></nav></header>
+  <main class="lab-main">
+   <section class="lab-head"><div><span class="kicker">REAL FRAMES · REAL TRACKS · EXPLAINABLE CANDIDATES</span><h1>Three matches.<br><em>Three different stories.</em></h1></div><p>This is the offline validation path—not a painted tactical animation. SoccerNet tracking geometry and pixels feed deterministic event rules; every claim links to frames and tracks.</p></section>
+   <section class="scene-tabs">${REAL_SCENES.map(scene=>`<button class="scene-tab ${scene.id===selected.id?'on':''}" data-scene="${scene.id}"><span>${scene.sequence}</span><strong>${scene.title}</strong><small>${scene.events} candidates</small></button>`).join('')}</section>
+   <section class="lab-grid">
+    <div class="real-player panel"><div class="panel-label"><span>01</span><strong>${selected.title.toUpperCase()}</strong><small>${selected.sequence} · authorized local research asset</small></div><div class="video-shell"><video id="real-video" controls playsinline preload="metadata" src="${selected.video}"></video><div class="video-missing" id="video-missing"><span>LOCAL ASSET REQUIRED</span><strong>Real footage is intentionally excluded from the public repository.</strong><p>Run <code>npm run prepare:demo-assets</code> after generating the three overlays.</p></div></div><div class="real-timeline">${selected.moments.map(moment=>`<button class="moment-jump" data-time="${moment.time}"><i style="left:${moment.time/30*100}%"></i><span>${moment.time.toFixed(2)}s</span><strong>${moment.type}</strong></button>`).join('')}</div></div>
+    <aside class="lab-proof panel"><div class="panel-label"><span>02</span><strong>RUN EVIDENCE</strong><small>Not model theatre</small></div><div class="lab-story"><span>DIRECTOR STORY</span><h2>${selected.story}</h2><p id="live-proof">Play the clip or select a detected moment.</p></div><div class="run-metrics"><div><span>BALL TRACK</span><strong>${selected.ball}</strong></div><div><span>TEAM CLUSTERS</span><strong>${selected.tracks}</strong></div><div><span>CANDIDATES</span><strong>${selected.events}</strong></div></div><div class="moment-list">${selected.moments.map((moment,index)=>`<button class="proof-moment" data-index="${index}" data-time="${moment.time}"><time>${moment.time.toFixed(2)}s</time><div><strong>${moment.type}</strong><p>${moment.evidence}</p></div><span>${Math.round(moment.confidence*100)}%</span></button>`).join('')}</div><div class="candidate-note">CANDIDATE ≠ GROUND TRUTH<br><span>Low-confidence semantic outputs are labelled or withheld.</span></div></aside>
+   </section>
+  </main><footer><span>SoccerNet/SN-Tracking-2023 · local research validation</span><span>FOOTAGE NOT REDISTRIBUTED · CODE AND EVIDENCE PUBLIC</span></footer>
  </div>`}
 
 function appHtml() { const last=state.processed[state.processed.length-1]; return `
@@ -298,9 +326,14 @@ function bind() {
  document.querySelector('#close-broadcast')?.addEventListener('click',()=>{state.overlay=false;render()});
  document.querySelectorAll('#run-demo').forEach(b=>b.addEventListener('click',()=>{clearInterval(state.timer);state.page='studio';state.time=0;state.cursor=0;state.score=[0,0];state.processed=[];state.insights=[];state.selectedInsight=null;state.compile=null;state.speed=8;state.demo=true;const c=compileIntent(templates[0]);state.programs=[{...c,id:'demo_high_press',version:1,active:true,lastTrigger:null,conditionActive:false}];state.playing=true;state.timer=setInterval(tick,500);render();window.scrollTo(0,0)}));
  document.querySelectorAll('#open-studio').forEach(b=>b.addEventListener('click',()=>{state.page='studio';render();window.scrollTo(0,0)}));
+ document.querySelectorAll('#open-real-lab').forEach(b=>b.addEventListener('click',()=>{state.page='lab';state.realScene=state.realScene||REAL_SCENES[0].id;render();window.scrollTo(0,0)}));
+ document.querySelectorAll('.scene-tab').forEach(b=>b.addEventListener('click',()=>{state.realScene=b.dataset.scene;render()}));
+ const realVideo=document.querySelector('#real-video');
+ if(realVideo){const missing=document.querySelector('#video-missing');realVideo.addEventListener('loadeddata',()=>missing?.classList.add('hidden'));realVideo.addEventListener('error',()=>missing?.classList.remove('hidden'));realVideo.addEventListener('timeupdate',()=>{const scene=REAL_SCENES.find(item=>item.id===state.realScene)||REAL_SCENES[0];const near=[...scene.moments].reverse().find(item=>item.time<=realVideo.currentTime+.15);const proof=document.querySelector('#live-proof');if(near&&proof)proof.innerHTML=`<b>${near.type}</b><br>${near.evidence} · confidence ${Math.round(near.confidence*100)}%`;});}
+ document.querySelectorAll('.moment-jump,.proof-moment').forEach(b=>b.addEventListener('click',()=>{if(realVideo){realVideo.currentTime=Number(b.dataset.time);realVideo.play().catch(()=>{});}}));
  document.querySelector('#back-home')?.addEventListener('click',()=>{clearInterval(state.timer);state.playing=false;state.demo=false;state.overlay=false;state.page='home';render();window.scrollTo(0,0)});
  document.querySelector('#exit-demo')?.addEventListener('click',()=>{state.demo=false;render()});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&state.overlay){state.overlay=false;render()}},{once:true});
 }
-function render(){ document.querySelector('#app').innerHTML=state.page==='home'?landingPage():appHtml(); bind(); }
+function render(){ document.querySelector('#app').innerHTML=state.page==='home'?landingPage():state.page==='lab'?realLabPage():appHtml(); bind(); }
 render();

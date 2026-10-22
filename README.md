@@ -21,10 +21,18 @@ Every viewer cares about something different, but traditional broadcasts give ev
 
 Use **Watch the 90-second demo** on the homepage for the guided experience. See [DEMO_SCRIPT.md](DEMO_SCRIPT.md) for the submission-video script.
 
+The homepage also opens a **Real Vision Lab** with three validated SoccerNet
+tracking scenes: goal threat, fast transition, and pressure-to-turnover. The
+public build exposes reproducible run evidence without redistributing match
+footage. After generating the local overlays, run `npm run prepare:demo-assets`
+to enable full video playback for an authorized local judging or screen-recording
+session.
+
 ## Features
 
 - synthetic event-stream replay with passes, shots, tackles, recoveries and pressure;
 - original synthetic broadcast-style training visual with an explicit CV-adapter overlay;
+- three-scene real-video validation lab with frame/track evidence and candidate confidence;
 - natural-language monitoring instructions;
 - count-threshold, player-event and ordered-sequence detection;
 - rising-edge and cooldown duplicate suppression;

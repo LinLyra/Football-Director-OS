@@ -12,4 +12,5 @@ data/*.db
 .openai/
 cv_data/
 cv_outputs/
+public/demo-scenes/*.mp4
 *.pt
