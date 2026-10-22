@@ -28,6 +28,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--confidence", default=0.25, type=float)
     parser.add_argument("--max-seconds", default=30.0, type=float)
     parser.add_argument("--imgsz", default=640, type=int)
+    parser.add_argument(
+        "--classes", nargs="+", type=int, default=[0],
+        help="COCO class IDs to track (0=person, 32=sports ball)",
+    )
     return parser.parse_args()
 
 
@@ -79,7 +83,7 @@ def main() -> None:
                 frame,
                 persist=True,
                 tracker="bytetrack.yaml",
-                classes=[0],
+                classes=args.classes,
                 conf=args.confidence,
                 imgsz=args.imgsz,
                 device=device,
@@ -91,13 +95,14 @@ def main() -> None:
                 coords = boxes.xyxy.cpu().tolist()
                 confidences = boxes.conf.cpu().tolist()
                 track_ids = boxes.id.int().cpu().tolist() if boxes.id is not None else [-1] * len(coords)
-                for track_id, confidence, (x1, y1, x2, y2) in zip(track_ids, confidences, coords):
+                class_ids = boxes.cls.int().cpu().tolist()
+                for track_id, class_id, confidence, (x1, y1, x2, y2) in zip(track_ids, class_ids, confidences, coords):
                     if track_id >= 0:
                         unique_tracks.add(track_id)
                     detection_count += 1
                     item = {
                         "track_id": track_id,
-                        "class": "person",
+                        "class": model.names[int(class_id)],
                         "confidence": round(float(confidence), 4),
                         "bbox_xyxy": [round(v, 2) for v in (x1, y1, x2, y2)],
                         "footpoint_normalized": [
@@ -106,11 +111,11 @@ def main() -> None:
                         ],
                     }
                     frame_tracks.append(item)
-                    color = (78, 255, 214) if track_id % 2 == 0 else (255, 210, 105)
+                    color = (255, 255, 255) if class_id == 32 else ((78, 255, 214) if track_id % 2 == 0 else (255, 210, 105))
                     cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), color, 1)
                     cv2.putText(
                         frame,
-                        f"P{track_id} {confidence:.2f}",
+                        f"{'BALL' if class_id == 32 else 'P'}{track_id} {confidence:.2f}",
                         (int(x1), max(12, int(y1) - 4)),
                         cv2.FONT_HERSHEY_SIMPLEX,
                         0.32,
@@ -143,16 +148,19 @@ def main() -> None:
         "pipeline": "YOLO object detection + ByteTrack multi-object tracking",
         "input": args.input.name,
         "model": args.model,
+        "classes": [model.names[item] for item in args.classes],
         "device": device,
         "source_fps": fps,
+        "source_width": width,
+        "source_height": height,
         "frames_processed": frame_index,
         "processing_seconds": round(elapsed, 2),
         "effective_fps": round(frame_index / elapsed, 2) if elapsed else None,
         "detections": detection_count,
         "unique_track_ids": len(unique_tracks),
         "limitations": [
-            "COCO person detections only",
-            "No ball detector",
+            "Generic COCO detections, not a football-specific detector",
+            "Sports-ball recall may be low at broadcast scale",
             "No automatic team identity",
             "No semantic pass, shot, or possession inference",
         ],

@@ -21,12 +21,12 @@ Every viewer cares about something different, but traditional broadcasts give ev
 
 Use **Watch the 90-second demo** on the homepage for the guided experience. See [DEMO_SCRIPT.md](DEMO_SCRIPT.md) for the submission-video script.
 
-The homepage also opens a **Real Vision Lab** with three validated SoccerNet
-tracking scenes: goal threat, fast transition, and pressure-to-turnover. The
-public build exposes reproducible run evidence without redistributing match
-footage. After generating the local overlays, run `npm run prepare:demo-assets`
-to enable full video playback for an authorized local judging or screen-recording
-session.
+The homepage also opens a **Real Vision Lab**. Its public scene runs genuine
+YOLO + ByteTrack inference on an 18-second Pexels-licensed football clip and
+shows evidence-linked ball-contact candidates. Three additional SoccerNet
+tracking scenes—goal threat, fast transition, and pressure-to-turnover—remain
+available for local research validation without redistributing their footage.
+Run `npm run prepare:demo-assets` to enable those additional local scenes.
 
 ## Features
 

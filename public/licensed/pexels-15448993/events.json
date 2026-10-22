@@ -1,0 +1,209 @@
+{
+  "schema_version": "1.0",
+  "source": "Pexels 15448993",
+  "method": "YOLO person/sports-ball detections + ByteTrack + deterministic geometry",
+  "disclaimer": "Generic-detector outputs are candidates, not football action ground truth.",
+  "frames_processed": 1078,
+  "ball_visible_frames": 795,
+  "ball_frame_coverage": 0.7375,
+  "event_counts_by_type": {
+    "BALL_CONTACT_CANDIDATE": 5,
+    "RAPID_BALL_MOVEMENT_CANDIDATE": 5
+  },
+  "events": [
+    {
+      "id": "rapid_ball_movement_candidate-000094",
+      "type": "RAPID_BALL_MOVEMENT_CANDIDATE",
+      "frame": 94,
+      "timestamp_seconds": 1.57,
+      "confidence": 0.9,
+      "status": "candidate",
+      "evidence": {
+        "start_frame": 64,
+        "end_frame": 94,
+        "normalized_displacement": 0.5143,
+        "threshold": 0.3756,
+        "start_ball_track_id": 74,
+        "end_ball_track_id": 94
+      }
+    },
+    {
+      "id": "ball_contact_candidate-000147",
+      "type": "BALL_CONTACT_CANDIDATE",
+      "frame": 147,
+      "timestamp_seconds": 2.45,
+      "confidence": 0.78,
+      "status": "candidate",
+      "evidence": {
+        "ball_detection_track_id": 100,
+        "nearest_player_track_id": 104,
+        "normalized_distance": 0.1008,
+        "supporting_frames": [
+          147,
+          148,
+          149,
+          150,
+          151,
+          152,
+          153
+        ]
+      }
+    },
+    {
+      "id": "ball_contact_candidate-000279",
+      "type": "BALL_CONTACT_CANDIDATE",
+      "frame": 279,
+      "timestamp_seconds": 4.65,
+      "confidence": 0.82,
+      "status": "candidate",
+      "evidence": {
+        "ball_detection_track_id": 120,
+        "nearest_player_track_id": 496,
+        "normalized_distance": 0.0531,
+        "supporting_frames": [
+          279,
+          280,
+          281,
+          282,
+          283,
+          284,
+          285,
+          286,
+          287
+        ]
+      }
+    },
+    {
+      "id": "ball_contact_candidate-000414",
+      "type": "BALL_CONTACT_CANDIDATE",
+      "frame": 414,
+      "timestamp_seconds": 6.91,
+      "confidence": 0.74,
+      "status": "candidate",
+      "evidence": {
+        "ball_detection_track_id": 120,
+        "nearest_player_track_id": 975,
+        "normalized_distance": 0.1012,
+        "supporting_frames": [
+          414,
+          415,
+          416,
+          417,
+          418
+        ]
+      }
+    },
+    {
+      "id": "rapid_ball_movement_candidate-000458",
+      "type": "RAPID_BALL_MOVEMENT_CANDIDATE",
+      "frame": 458,
+      "timestamp_seconds": 7.64,
+      "confidence": 0.9,
+      "status": "candidate",
+      "evidence": {
+        "start_frame": 428,
+        "end_frame": 458,
+        "normalized_displacement": 0.3807,
+        "threshold": 0.3756,
+        "start_ball_track_id": 120,
+        "end_ball_track_id": 1171
+      }
+    },
+    {
+      "id": "ball_contact_candidate-000584",
+      "type": "BALL_CONTACT_CANDIDATE",
+      "frame": 584,
+      "timestamp_seconds": 9.74,
+      "confidence": 0.82,
+      "status": "candidate",
+      "evidence": {
+        "ball_detection_track_id": 1570,
+        "nearest_player_track_id": 1536,
+        "normalized_distance": 0.1054,
+        "supporting_frames": [
+          584,
+          585,
+          586,
+          587,
+          588,
+          589,
+          590,
+          591,
+          592
+        ]
+      }
+    },
+    {
+      "id": "rapid_ball_movement_candidate-000590",
+      "type": "RAPID_BALL_MOVEMENT_CANDIDATE",
+      "frame": 590,
+      "timestamp_seconds": 9.84,
+      "confidence": 0.9,
+      "status": "candidate",
+      "evidence": {
+        "start_frame": 560,
+        "end_frame": 590,
+        "normalized_displacement": 0.4201,
+        "threshold": 0.3756,
+        "start_ball_track_id": 1543,
+        "end_ball_track_id": 1570
+      }
+    },
+    {
+      "id": "ball_contact_candidate-000734",
+      "type": "BALL_CONTACT_CANDIDATE",
+      "frame": 734,
+      "timestamp_seconds": 12.25,
+      "confidence": 0.82,
+      "status": "candidate",
+      "evidence": {
+        "ball_detection_track_id": 1624,
+        "nearest_player_track_id": 1633,
+        "normalized_distance": 0.0991,
+        "supporting_frames": [
+          734,
+          735,
+          736,
+          737,
+          738,
+          739,
+          740,
+          741,
+          742
+        ]
+      }
+    },
+    {
+      "id": "rapid_ball_movement_candidate-000756",
+      "type": "RAPID_BALL_MOVEMENT_CANDIDATE",
+      "frame": 756,
+      "timestamp_seconds": 12.61,
+      "confidence": 0.9,
+      "status": "candidate",
+      "evidence": {
+        "start_frame": 726,
+        "end_frame": 756,
+        "normalized_displacement": 0.3829,
+        "threshold": 0.3756,
+        "start_ball_track_id": 1624,
+        "end_ball_track_id": 1624
+      }
+    },
+    {
+      "id": "rapid_ball_movement_candidate-000888",
+      "type": "RAPID_BALL_MOVEMENT_CANDIDATE",
+      "frame": 888,
+      "timestamp_seconds": 14.81,
+      "confidence": 0.9,
+      "status": "candidate",
+      "evidence": {
+        "start_frame": 858,
+        "end_frame": 888,
+        "normalized_displacement": 0.63,
+        "threshold": 0.3756,
+        "start_ball_track_id": 1673,
+        "end_ball_track_id": 1673
+      }
+    }
+  ]
+}
