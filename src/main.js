@@ -1,4 +1,5 @@
 import './styles.css';
+import licensedRun from '../public/licensed/pexels-15448993/events.json';
 
 const MATCH = {
   home: { id: 'east', name: 'East United', short: 'EAS', color: '#d6ff4b' },
@@ -36,11 +37,27 @@ const templates = [
   'Tell me when the left-back is leaving too much space behind him.'
 ];
 
+const realTemplates = [
+  'Alert me when two ball-contact candidates occur within 10 seconds.',
+  'Show every rapid ball-movement candidate.',
+  'Notify me when ball-contact confidence is at least 80%.',
+];
+
+const realEvents = licensedRun.events.map(event => {
+  const contact = event.type === 'BALL_CONTACT_CANDIDATE';
+  const evidence = event.evidence;
+  return {
+    id:event.id, time:event.timestamp_seconds, type:event.type, frame:event.frame,
+    confidence:event.confidence, status:event.status, real:true, evidence,
+    player:contact && evidence.nearest_player_track_id ? `Track P${evidence.nearest_player_track_id}` : 'Tracked ball',
+    evidenceText:contact
+      ? `Ball track ${evidence.ball_detection_track_id} · nearest player P${evidence.nearest_player_track_id} · ${evidence.supporting_frames.length} supporting frames`
+      : `Frames ${evidence.start_frame}–${evidence.end_frame} · displacement ${evidence.normalized_displacement} · threshold ${evidence.threshold}`,
+  };
+});
+
 const REAL_SCENES = [
-  {id:'pexels-15448993', sequence:'PUBLIC DEMO', title:'Licensed match tracking', story:'A real match clip is tracked frame by frame, with ball contacts grounded in player proximity.', video:'/licensed/pexels-15448993/tracked.mp4', ball:'73.7%', tracks:'3,183', events:10, licensed:true, duration:18, moments:[
-    {time:4.65,type:'BALL CONTACT CANDIDATE',confidence:.82,evidence:'Ball track 120 · nearest player P496 · 9 supporting frames'},
-    {time:12.25,type:'BALL CONTACT CANDIDATE',confidence:.82,evidence:'Ball track 1624 · nearest player P1633 · 9 supporting frames'},
-  ]},
+  {id:'pexels-15448993', sequence:'PUBLIC DEMO', title:'Licensed match tracking', story:'A real match clip is tracked frame by frame, then all 10 candidates are replayed through the Director rule engine.', video:'/licensed/pexels-15448993/tracked.mp4', ball:'73.7%', tracks:'3,183', events:10, licensed:true, duration:18, moments:realEvents.map(event=>({time:event.time,type:event.type.replaceAll('_',' '),confidence:event.confidence,evidence:event.evidenceText}))},
   {id:'snmot-101', sequence:'SNMOT-101', title:'Goal threat', story:'Rapid progression produces a shot-level threat.', video:'/demo-scenes/snmot-101.mp4', ball:1, tracks:'11 : 8', events:16, moments:[
     {time:7.64,type:'RAPID PROGRESSION',confidence:.74,evidence:'Ball track 1 · frames 167–192 · displacement 0.1678'},
     {time:23.96,type:'SHOT CANDIDATE',confidence:.70,evidence:'Ball track 1 · frames 595–600 · speed 0.0751'},
@@ -59,6 +76,7 @@ const state = {
   time: 0, speed: 2, playing: false, timer: null, cursor: 0, score: [0,0],
   mode: 'casual', selectedInsight: null, compile: null, compiling: false,
   programs: [], insights: [], processed: [], language:'en', overlay:false, demo:false, page:'home', view:'vision', realScene:'pexels-15448993',
+  realCursor:0, realLastTime:0,
 };
 
 const isLocalPreview = ['localhost', '127.0.0.1'].includes(window.location.hostname);
@@ -97,6 +115,25 @@ function compileIntent(text) {
   return { status:'clarify', reason:'I could not map that request to the supported event fields.', suggestion:templates[1] };
 }
 
+function compileRealIntent(text) {
+  const lower=text.toLowerCase();
+  if (/rapid|fast|movement|移动|快速/.test(lower)) return {
+    status:'valid', name:'Rapid ball movement', kind:'real_event', eventType:'RAPID_BALL_MOVEMENT_CANDIDATE',
+    summary:'Trigger on every evidence-linked rapid ball-movement candidate', provider:'real-cv-deterministic-adapter',
+    json:{operator:'EVENT_MATCH',filter:{event_type:'RAPID_BALL_MOVEMENT_CANDIDATE',status:'candidate'},source:'licensed_cv_run'}
+  };
+  if (/confidence|80|置信/.test(lower)) return {
+    status:'valid', name:'High-confidence ball contact', kind:'real_confidence', eventType:'BALL_CONTACT_CANDIDATE', threshold:.8,
+    summary:'Ball-contact candidate with confidence ≥ 80%', provider:'real-cv-deterministic-adapter',
+    json:{operator:'CONFIDENCE_THRESHOLD',filter:{event_type:'BALL_CONTACT_CANDIDATE'},threshold:.8,source:'licensed_cv_run'}
+  };
+  return {
+    status:'valid', name:'Repeated ball involvement', kind:'real_count', eventType:'BALL_CONTACT_CANDIDATE', threshold:2, window:10,
+    summary:'2 ball-contact candidates inside a rolling 10-second window', provider:'real-cv-deterministic-adapter',
+    json:{operator:'COUNT_THRESHOLD',filter:{event_type:'BALL_CONTACT_CANDIDATE',status:'candidate'},window_seconds:10,threshold:2,source:'licensed_cv_run'}
+  };
+}
+
 function normalizeApiProgram(payload, original) {
   if (payload.status !== 'valid') return {
     status: payload.status === 'unsupported' ? 'unsupported' : 'clarify',
@@ -113,6 +150,7 @@ function normalizeApiProgram(payload, original) {
 }
 
 async function compileWithProvider(text) {
+  if (state.view === 'vision') return {...compileRealIntent(text), original:text};
   if (!API_BASE) return {...compileIntent(text), original:text, provider:'browser-safe-fallback'};
   const controller = new AbortController();
   const timeout = setTimeout(()=>controller.abort(), 2500);
@@ -126,6 +164,49 @@ async function compileWithProvider(text) {
   } catch (_) {
     return {...compileIntent(text), original:text, provider:'browser-safe-fallback'};
   } finally { clearTimeout(timeout); }
+}
+
+function defaultRealProgram(){const c=compileRealIntent(realTemplates[0]);return {...c,id:'real_ball_contact_monitor',version:1,active:true,lastTrigger:null,conditionActive:false}}
+
+function resetRealRun() {
+  state.time=0; state.realCursor=0; state.realLastTime=0; state.processed=[]; state.insights=[]; state.selectedInsight=null;
+  state.programs.forEach(p=>{p.lastTrigger=null;p.conditionActive=false});
+}
+
+function emitRealInsight(p,evidence,values) {
+  const title=p.kind==='real_event'?'Rapid ball movement detected':p.kind==='real_confidence'?'High-confidence ball contact':'Repeated ball involvement detected';
+  const casual=p.kind==='real_event'
+    ? `The tracked ball moved rapidly across ${values.frames} frames. The moment is linked directly to the CV run.`
+    : p.kind==='real_confidence'
+      ? `A player-ball proximity pattern crossed the ${Math.round(p.threshold*100)}% confidence threshold.`
+      : `${values.count} ball-contact candidates occurred inside ${values.window} seconds. This is a candidate pattern, not asserted ground truth.`;
+  const analyst=p.kind==='real_event'
+    ? `RAPID_BALL_MOVEMENT_CANDIDATE: displacement=${values.displacement}, threshold=${values.threshold}, frames=${values.frames}.`
+    : p.kind==='real_confidence'
+      ? `BALL_CONTACT_CANDIDATE: confidence=${Math.round(values.confidence*100)}%, threshold=${Math.round(p.threshold*100)}%.`
+      : `COUNT(BALL_CONTACT_CANDIDATE)=${values.count} in rolling ${values.window}s; threshold=${p.threshold}.`;
+  state.insights.unshift({id:`real_ins_${evidence[evidence.length-1].id}`,time:state.time,programId:p.id,title,casual,analyst,evidence,values,verified:true,candidate:true});
+  state.selectedInsight=state.insights[0].id;
+}
+
+function evaluateReal(event) {
+  state.programs.filter(p=>p.active).forEach(p=>{
+    if(p.kind==='real_event'&&event.type===p.eventType) emitRealInsight(p,[event],{frames:event.evidence.end_frame-event.evidence.start_frame,displacement:event.evidence.normalized_displacement,threshold:event.evidence.threshold});
+    if(p.kind==='real_confidence'&&event.type===p.eventType&&event.confidence>=p.threshold) emitRealInsight(p,[event],{confidence:event.confidence,threshold:p.threshold});
+    if(p.kind==='real_count'){
+      const evidence=state.processed.filter(item=>item.type===p.eventType&&item.time>=event.time-p.window);
+      if(evidence.length>=p.threshold&&!p.conditionActive){p.conditionActive=true;emitRealInsight(p,evidence,{count:evidence.length,window:p.window})}
+      if(evidence.length<p.threshold)p.conditionActive=false;
+    }
+  });
+}
+
+function processRealUntil(currentTime) {
+  let changed=false;
+  if(currentTime+.3<state.realLastTime){resetRealRun();changed=true}
+  state.time=currentTime;state.realLastTime=currentTime;
+  while(state.realCursor<realEvents.length&&realEvents[state.realCursor].time<=currentTime+.05){const event=realEvents[state.realCursor++];state.processed.push(event);evaluateReal(event);changed=true}
+  return changed;
 }
 
 function matchesFilter(e,p) {
@@ -210,6 +291,8 @@ function programCard(p) { return `<article class="program-card ${p.active?'activ
  </article>`; }
 
 function translatedInsight(i) {
+  if(i.candidate&&state.language==='zh') return {title:i.title==='Repeated ball involvement detected'?'检测到连续触球候选':'检测到快速球移动',text:i.casual};
+  if(i.candidate&&state.language==='es') return {title:i.title==='Repeated ball involvement detected'?'Participación repetida del balón detectada':'Movimiento rápido del balón detectado',text:i.casual};
   if(state.language==='zh') return {title:i.title==='High press is producing turnovers'?'高位压迫正在制造转换':i.title==='Rapid transition detected'?'发现快速攻防转换':i.title.includes('takes a shot')?'关键球员完成射门':'比赛正在变得开放', text:i.title==='High press is producing turnovers'?'东部联队在五分钟内三次于前场夺回球权，他们的压迫已经开始破坏对手的组织。':i.title==='Rapid transition detected'?'夺回球权后立刻形成射门——反抢正在持续制造威胁。':i.casual};
   if(state.language==='es') return {title:i.title==='High press is producing turnovers'?'La presión alta genera transiciones':i.title==='Rapid transition detected'?'Transición rápida detectada':i.title.includes('takes a shot')?'Disparo del jugador clave':'El partido se abre', text:i.title==='High press is producing turnovers'?'East United recuperó el balón tres veces en campo rival. Su presión ya está alterando la salida del oponente.':i.title==='Rapid transition detected'?'La recuperación se convirtió inmediatamente en disparo: la contrapresión está creando peligro.':i.casual};
   return {title:i.title,text:state.mode==='casual'?i.casual:i.analyst};
@@ -223,17 +306,17 @@ function evidencePanel() {
   const i=state.insights.find(x=>x.id===state.selectedInsight);
   if(!i) return `<div class="empty-evidence"><span>◎</span><h3>Evidence, not guesswork</h3><p>When a Director rule fires, the exact source events and computed values appear here.</p></div>`;
   const p=state.programs.find(x=>x.id===i.programId);
-  return `<div class="evidence-head"><div><span class="eyebrow">VERIFIED INSIGHT</span><h3>${esc(translatedInsight(i).title)}</h3></div><span class="confidence">100% grounded</span></div>
+  return `<div class="evidence-head"><div><span class="eyebrow">${i.candidate?'EVIDENCE-LINKED CANDIDATE':'VERIFIED INSIGHT'}</span><h3>${esc(translatedInsight(i).title)}</h3></div><span class="confidence">${i.candidate?'CV grounded':'100% grounded'}</span></div>
   <div class="proof-line"><span>Rule</span><strong>${esc(p?.summary||'')}</strong></div>
   <div class="proof-line"><span>Computation</span><code>${esc(JSON.stringify(i.values))}</code></div>
   <button class="broadcast-btn" id="show-broadcast">OPEN BROADCAST OVERLAY <span>↗</span></button>
   <h4>Supporting events</h4>
-  <div class="evidence-events">${i.evidence.map(e=>`<div><span>${fmt(e.time)}</span><strong>${eventLabel(e)}</strong><small>${esc(e.player)} · ${region(e)} · (${e.x??'—'}, ${e.y??'—'})</small><code>${e.id}</code></div>`).join('')}</div>`;
+  <div class="evidence-events">${i.evidence.map(e=>`<div><span>${fmt(e.time)}</span><strong>${eventLabel(e)}</strong><small>${e.real?esc(`${e.evidenceText} · confidence ${Math.round(e.confidence*100)}%`):`${esc(e.player)} · ${region(e)} · (${e.x??'—'}, ${e.y??'—'})`}</small><code>${e.id}</code></div>`).join('')}</div>`;
 }
 
-function demoStep(){return state.time<64?0:state.time<151?1:state.time<232?2:3}
+function demoStep(){return state.view==='vision'?(state.time<1.5?0:state.time<2.45?1:state.insights.length?3:2):(state.time<64?0:state.time<151?1:state.time<232?2:3)}
 function demoRail(){const steps=['Brief the AI','Watch the match','Detect the pattern','Explain the moment'];return `<div class="demo-rail"><span>LIVE DEMO</span>${steps.map((s,i)=>`<div class="${demoStep()>=i?'done':''} ${demoStep()===i?'now':''}"><i>${demoStep()>i?'✓':i+1}</i>${s}</div>`).join('')}<button id="exit-demo">EXIT</button></div>`}
-function broadcastOverlay(){const i=state.insights.find(x=>x.id===state.selectedInsight)||state.insights[0];if(!state.overlay||!i)return'';const c=translatedInsight(i);return `<div class="broadcast" role="dialog" aria-label="Broadcast overlay preview"><button id="close-broadcast">×</button><div class="broadcast-top"><span><i></i> DIRECTOR LIVE</span><b>${MATCH.home.short} ${state.score[0]} — ${state.score[1]} ${MATCH.away.short}</b><time>${fmt(state.time)}</time></div><div class="broadcast-stage"><span class="broadcast-kicker">AI MATCH INTELLIGENCE</span><h2>${esc(c.title)}</h2><p>${esc(c.text)}</p><div class="broadcast-proof"><span>✓ VERIFIED</span><b>${i.evidence.length} EVENT${i.evidence.length===1?'':'S'} ANALYSED</b><em>DIRECTOR/OS</em></div></div><div class="broadcast-caption">READY FOR LIVE PRODUCTION · 16:9 SAFE AREA · ${state.language.toUpperCase()}</div></div>`}
+function broadcastOverlay(){const i=state.insights.find(x=>x.id===state.selectedInsight)||state.insights[0];if(!state.overlay||!i)return'';const c=translatedInsight(i);return `<div class="broadcast" role="dialog" aria-label="Broadcast overlay preview"><button id="close-broadcast">×</button><div class="broadcast-top"><span><i></i> DIRECTOR LIVE</span><b>${i.candidate?'REAL CV FEED':`${MATCH.home.short} ${state.score[0]} — ${state.score[1]} ${MATCH.away.short}`}</b><time>${fmt(state.time)}</time></div><div class="broadcast-stage"><span class="broadcast-kicker">AI MATCH INTELLIGENCE</span><h2>${esc(c.title)}</h2><p>${esc(c.text)}</p><div class="broadcast-proof"><span>✓ ${i.candidate?'EVIDENCE-LINKED':'VERIFIED'}</span><b>${i.evidence.length} EVENT${i.evidence.length===1?'':'S'} ANALYSED</b><em>DIRECTOR/OS</em></div></div><div class="broadcast-caption">READY FOR LIVE PRODUCTION · 16:9 SAFE AREA · ${state.language.toUpperCase()}</div></div>`}
 
 function landingPage(){return `
  <div class="landing">
@@ -249,20 +332,20 @@ function landingPage(){return `
   </main><footer class="landing-footer"><span>DIRECTOR/OS · AGENTIC MATCH INTELLIGENCE</span><span>SYNTHETIC DATA · DETERMINISTIC EXECUTION · EXPLAINABLE OUTPUT</span></footer>
  </div>`}
 
-function realLabPage(){const selected=REAL_SCENES.find(scene=>scene.id===state.realScene)||REAL_SCENES[0];return `
+function realLabPage(){const selected=REAL_SCENES[0];return `
  <div class="real-lab">
-  <header><button id="back-home" class="brand"><span class="brand-mark"><i></i><i></i><i></i></span><span>DIRECTOR<span class="brand-muted">/OS</span></span></button><nav><span class="lab-pill"><i></i> REAL VISION LAB</span><button id="open-studio" class="nav-studio">OPEN SYNTHETIC STUDIO ↗</button></nav></header>
+  <header><button id="back-home" class="brand"><span class="brand-mark"><i></i><i></i><i></i></span><span>DIRECTOR<span class="brand-muted">/OS</span></span></button><nav><span class="lab-pill"><i></i> REAL VISION LAB</span><button id="open-studio" class="nav-studio">OPEN LIVE STUDIO ↗</button></nav></header>
   <main class="lab-main">
-   <section class="lab-head"><div><span class="kicker">REAL FRAMES · REAL TRACKS · EXPLAINABLE CANDIDATES</span><h1>Real footage.<br><em>Evidence on every frame.</em></h1></div><p>The public scene runs genuine YOLO + ByteTrack on Pexels-licensed footage. Three additional SoccerNet research scenes validate distinct storylines locally without redistributing protected broadcasts.</p></section>
-   <section class="scene-tabs">${REAL_SCENES.map(scene=>`<button class="scene-tab ${scene.id===selected.id?'on':''}" data-scene="${scene.id}"><span>${scene.sequence}</span><strong>${scene.title}</strong><small>${scene.events} candidates</small></button>`).join('')}</section>
+   <section class="lab-head"><div><span class="kicker">REAL FRAMES · REAL TRACKS · EXPLAINABLE CANDIDATES</span><h1>Real footage.<br><em>Evidence on every frame.</em></h1></div><p>This public scene runs genuine YOLO + ByteTrack on Pexels-licensed footage. All 10 timestamped candidates are now replayed into the same rule engine used by the live studio.</p></section>
+   <section class="scene-tabs"><div class="scene-tab on"><span>${selected.sequence}</span><strong>${selected.title}</strong><small>${selected.events} public candidates · playable</small></div><div class="run-route"><span>01 REAL VIDEO</span><b>→</b><span>02 10 CV EVENTS</span><b>→</b><span>03 RULE ENGINE</span><b>→</b><span>04 EXPLAINED OUTPUT</span></div></section>
    <section class="lab-grid">
     <div class="real-player panel"><div class="panel-label"><span>01</span><strong>${selected.title.toUpperCase()}</strong><small>${selected.licensed?'Pexels licensed public asset · Luis Quintero':`${selected.sequence} · authorized local research asset`}</small></div><div class="video-shell"><video id="real-video" controls playsinline preload="metadata" src="${selected.video}"></video><div class="video-missing" id="video-missing"><span>LOCAL ASSET REQUIRED</span><strong>Research footage is intentionally excluded from the public repository.</strong><p>Select “Licensed match tracking” for the public playable scene.</p></div></div><div class="real-timeline">${selected.moments.map(moment=>`<button class="moment-jump" data-time="${moment.time}"><i style="left:${moment.time/(selected.duration||30)*100}%"></i><span>${moment.time.toFixed(2)}s</span><strong>${moment.type}</strong></button>`).join('')}</div></div>
     <aside class="lab-proof panel"><div class="panel-label"><span>02</span><strong>RUN EVIDENCE</strong><small>Not model theatre</small></div><div class="lab-story"><span>DIRECTOR STORY</span><h2>${selected.story}</h2><p id="live-proof">Play the clip or select a detected moment.</p></div><div class="run-metrics"><div><span>${selected.licensed?'BALL COVERAGE':'BALL TRACK'}</span><strong>${selected.ball}</strong></div><div><span>${selected.licensed?'PERSON BOXES':'TEAM CLUSTERS'}</span><strong>${selected.tracks}</strong></div><div><span>CANDIDATES</span><strong>${selected.events}</strong></div></div><div class="moment-list">${selected.moments.map((moment,index)=>`<button class="proof-moment" data-index="${index}" data-time="${moment.time}"><time>${moment.time.toFixed(2)}s</time><div><strong>${moment.type}</strong><p>${moment.evidence}</p></div><span>${Math.round(moment.confidence*100)}%</span></button>`).join('')}</div><div class="candidate-note">CANDIDATE ≠ GROUND TRUTH<br><span>Low-confidence semantic outputs are labelled or withheld.</span></div>${selected.licensed?'<a class="asset-credit" href="https://www.pexels.com/video/football-players-kicking-the-ball-during-a-match-15448993/" target="_blank" rel="noreferrer">VIDEO: LUIS QUINTERO / PEXELS ↗</a>':''}</aside>
    </section>
-  </main><footer><span>Pexels public demo · SoccerNet local research validation</span><span>LICENSE RECORDED · OUTPUTS LABELLED · EVIDENCE PUBLIC</span></footer>
+  </main><footer><span>Pexels licensed public demo · complete replayable pipeline</span><span>LICENSE RECORDED · OUTPUTS LABELLED · EVIDENCE PUBLIC</span></footer>
  </div>`}
 
-function appHtml() { const last=state.processed[state.processed.length-1]; const vision=state.view==='vision'; return `
+function appHtml() { const last=state.processed[state.processed.length-1]; const vision=state.view==='vision'; const availableTemplates=vision?realTemplates:templates; return `
  ${state.demo?demoRail():''}${broadcastOverlay()}
  <header><button id="back-home" class="brand"><span class="brand-mark"><i></i><i></i><i></i></span><span>DIRECTOR<span class="brand-muted">/OS</span></span></button><nav><button class="demo-btn" id="open-real-lab">VIEW CV EVIDENCE</button><button class="demo-btn" id="run-demo">▶ RUN DEMO</button><select id="language" aria-label="Commentary language"><option value="en" ${state.language==='en'?'selected':''}>EN</option><option value="zh" ${state.language==='zh'?'selected':''}>中文</option><option value="es" ${state.language==='es'?'selected':''}>ES</option></select><span class="live-pill"><i></i> ${vision?'REAL VIDEO PLAYING':'EVENT SIMULATION LIVE'}</span><div class="mode-switch"><button class="mode ${state.mode==='casual'?'on':''}" data-mode="casual">Fan view</button><button class="mode ${state.mode==='analyst'?'on':''}" data-mode="analyst">Analyst view</button></div></nav></header>
  <main>
@@ -276,12 +359,12 @@ function appHtml() { const last=state.processed[state.processed.length-1]; const
    ${vision?'<div class="scoreboard cv-scoreboard"><div class="club home"><span class="crest">CV</span><div><strong>Licensed match feed</strong><small>PUBLIC DEMO</small></div></div><div class="score"><b>YOLO + ByteTrack</b><span>1,078 REAL FRAMES PROCESSED</span></div><div class="club away"><div><strong>Ball coverage</strong><small>795 / 1,078 FRAMES</small></div><span class="crest blue">74%</span></div></div>':`<div class="scoreboard"><div class="club home"><span class="crest">EU</span><div><strong>${MATCH.home.name}</strong><small>HOME</small></div></div><div class="score"><b>${state.score[0]} – ${state.score[1]}</b><span>${fmt(state.time)} · DEMO MATCH</span></div><div class="club away"><div><strong>${MATCH.away.name}</strong><small>AWAY</small></div><span class="crest blue">NC</span></div></div>`}
    ${state.view==='vision'?renderVision():renderPitch()}
    ${sourcePipeline()}
-   ${vision?'<div class="cv-actions"><button id="toggle-cv-video">Ⅱ</button><span><b>WHAT YOU ARE SEEING</b> Every moving box was produced by real inference. BALL labels are COCO sports-ball detections; IDs come from ByteTrack.</span><button id="open-real-lab">VIEW FRAME EVIDENCE →</button></div>':`<div class="transport"><button id="reset">↺</button><button id="play" class="play">${state.playing?'Ⅱ':'▶'}</button><div class="timeline"><i style="width:${state.time/4.5}%"></i>${events.map(e=>`<span style="left:${e.time/4.5}%"></span>`).join('')}</div><select id="speed"><option ${state.speed===1?'selected':''}>1</option><option ${state.speed===2?'selected':''}>2</option><option ${state.speed===4?'selected':''}>4</option><option value="8" ${state.speed===8?'selected':''}>8</option></select><span>×</span></div><div class="ticker"><span>LATEST EVENT</span><strong>${last?`${fmt(last.time)} · ${team(last.team).short} · ${eventLabel(last)} · ${last.player}`:'Waiting for kick-off'}</strong></div>`}
+   ${vision?`<div class="cv-actions"><button id="toggle-cv-video">Ⅱ</button><span><b>${last?`LIVE EVENT · ${fmt(last.time)} · ${eventLabel(last)}`:'WAITING FOR FIRST CV EVENT'}</b> ${last?esc(last.evidenceText):'The 10 saved model events enter the rule engine at their exact video timestamps.'}</span><button id="open-real-lab">VIEW FRAME EVIDENCE →</button></div>`:`<div class="transport"><button id="reset">↺</button><button id="play" class="play">${state.playing?'Ⅱ':'▶'}</button><div class="timeline"><i style="width:${state.time/4.5}%"></i>${events.map(e=>`<span style="left:${e.time/4.5}%"></span>`).join('')}</div><select id="speed"><option ${state.speed===1?'selected':''}>1</option><option ${state.speed===2?'selected':''}>2</option><option ${state.speed===4?'selected':''}>4</option><option value="8" ${state.speed===8?'selected':''}>8</option></select><span>×</span></div><div class="ticker"><span>LATEST EVENT</span><strong>${last?`${fmt(last.time)} · ${team(last.team).short} · ${eventLabel(last)} · ${last.player}`:'Waiting for kick-off'}</strong></div>`}
   </section>
   <section class="director panel">
-   <div class="panel-label"><span>02</span><strong>DIRECT THE MATCH</strong><small>Describe what matters to you</small></div>
+   <div class="panel-label"><span>02</span><strong>${vision?'DIRECT THE REAL FEED':'DIRECT THE MATCH'}</strong><small>Describe what matters to you</small></div>
    <div class="director-intro"><div><h2>What should I watch for?</h2><p>Use natural language. Director turns it into a precise monitor that runs against the live event stream.</p></div><span class="engine"><i></i> READY</span></div>
-   <form id="director-form"><div class="prompt-shell"><span class="prompt-mark">↳</span><textarea id="intent" rows="3" placeholder="e.g. Tell me when East United win the ball high three times…">${esc(state.compile?.original||templates[0])}</textarea><button type="submit" ${state.compiling?'disabled':''}>${state.compiling?'<span class="spinner"></span> VALIDATING':'CREATE MONITOR <span>→</span>'}</button></div><div class="example-row"><span>Try:</span>${templates.slice(1,4).map((t,i)=>`<button type="button" class="example-chip" data-text="${esc(t)}">${['Player watch','Fast transitions','Shot surge'][i]}</button>`).join('')}<small>⌘ ENTER</small></div></form>
+   <form id="director-form"><div class="prompt-shell"><span class="prompt-mark">↳</span><textarea id="intent" rows="3" placeholder="e.g. Alert me when two ball contacts occur…">${esc(state.compile?.original||availableTemplates[0])}</textarea><button type="submit" ${state.compiling?'disabled':''}>${state.compiling?'<span class="spinner"></span> VALIDATING':'CREATE MONITOR <span>→</span>'}</button></div><div class="example-row"><span>Try:</span>${availableTemplates.slice(1,4).map((t,i)=>`<button type="button" class="example-chip" data-text="${esc(t)}">${vision?['Rapid movement','80% confidence'][i]:['Player watch','Fast transitions','Shot surge'][i]}</button>`).join('')}<small>⌘ ENTER</small></div></form>
    ${state.compile?compileCard(state.compile):''}
    <div class="subhead"><h3>Live monitors</h3><span>${state.programs.filter(p=>p.active).length} RUNNING</span></div>
    <div class="program-list">${state.programs.length?state.programs.map(programCard).join(''):'<div class="empty-small">Compile a direction to start monitoring the match.</div>'}</div>
@@ -295,12 +378,15 @@ function compileCard(c) {
  return `<div class="compile-card"><div class="compile-check">✓</div><div class="compile-copy"><span>READY TO MONITOR</span><strong>${esc(c.name)}</strong><p>${esc(c.summary)}</p><details><summary>View how this works</summary><pre>${esc(JSON.stringify(c.json,null,2))}</pre></details></div><button id="activate">START MONITORING <span>→</span></button></div>`;
 }
 
+function enterRealStudio(demo=false){clearInterval(state.timer);state.page='studio';state.view='vision';state.demo=demo;state.playing=false;state.compile=null;state.programs=[defaultRealProgram()];resetRealRun();render();window.scrollTo(0,0)}
+function switchDataView(view){clearInterval(state.timer);state.view=view;state.demo=false;state.compile=null;if(view==='vision'){state.programs=[defaultRealProgram()];resetRealRun()}else{state.programs=[];state.time=0;state.cursor=0;state.score=[0,0];state.processed=[];state.insights=[];state.selectedInsight=null}render()}
+
 function bind() {
  document.querySelector('#play')?.addEventListener('click',togglePlay);
  document.querySelector('#reset')?.addEventListener('click',reset);
  document.querySelector('#speed')?.addEventListener('change',e=>{state.speed=Number(e.target.value)});
  document.querySelector('#toggle-cv-video')?.addEventListener('click',e=>{const video=document.querySelector('#studio-real-video');if(!video)return;if(video.paused){video.play().catch(()=>{});e.currentTarget.textContent='Ⅱ'}else{video.pause();e.currentTarget.textContent='▶'}});
- document.querySelectorAll('.view-mode').forEach(b=>b.addEventListener('click',()=>{state.view=b.dataset.view;render()}));
+ document.querySelectorAll('.view-mode').forEach(b=>b.addEventListener('click',()=>switchDataView(b.dataset.view)));
  document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>{state.mode=b.dataset.mode;render()}));
  document.querySelector('#director-form')?.addEventListener('submit',async e=>{e.preventDefault();const text=document.querySelector('#intent').value.trim();state.compiling=true;state.compile={original:text};render();state.compile=await compileWithProvider(text);state.compiling=false;render()});
  document.querySelector('#intent')?.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter')document.querySelector('#director-form').requestSubmit()});
@@ -309,17 +395,19 @@ function bind() {
  document.querySelectorAll('.delete-program').forEach(b=>b.addEventListener('click',()=>{state.programs=state.programs.filter(x=>x.id!==b.dataset.id);render()}));
  document.querySelectorAll('.inspect-program').forEach(b=>b.addEventListener('click',()=>{const p=state.programs.find(x=>x.id===b.dataset.id);state.compile={...p,original:p.summary,status:'valid'};render()}));
  document.querySelectorAll('.insight-card').forEach(b=>b.addEventListener('click',()=>{state.selectedInsight=b.dataset.id;render()}));
- document.querySelectorAll('.use-suggestion').forEach(b=>b.addEventListener('click',()=>{state.compile={...compileIntent(b.dataset.text),original:b.dataset.text};render()}));
+ document.querySelectorAll('.use-suggestion').forEach(b=>b.addEventListener('click',()=>{state.compile={...(state.view==='vision'?compileRealIntent(b.dataset.text):compileIntent(b.dataset.text)),original:b.dataset.text};render()}));
  document.querySelectorAll('.example-chip').forEach(b=>b.addEventListener('click',()=>{const input=document.querySelector('#intent');input.value=b.dataset.text;input.focus()}));
  document.querySelector('#language')?.addEventListener('change',e=>{state.language=e.target.value;render()});
  document.querySelector('#show-broadcast')?.addEventListener('click',()=>{state.overlay=true;render()});
  document.querySelector('#close-broadcast')?.addEventListener('click',()=>{state.overlay=false;render()});
- document.querySelectorAll('#run-demo').forEach(b=>b.addEventListener('click',()=>{clearInterval(state.timer);state.page='studio';state.time=0;state.cursor=0;state.score=[0,0];state.processed=[];state.insights=[];state.selectedInsight=null;state.compile=null;state.speed=8;state.demo=true;const c=compileIntent(templates[0]);state.programs=[{...c,id:'demo_high_press',version:1,active:true,lastTrigger:null,conditionActive:false}];state.playing=true;state.timer=setInterval(tick,500);render();window.scrollTo(0,0)}));
- document.querySelectorAll('#open-studio').forEach(b=>b.addEventListener('click',()=>{state.page='studio';render();window.scrollTo(0,0)}));
+ document.querySelectorAll('#run-demo').forEach(b=>b.addEventListener('click',()=>enterRealStudio(true)));
+ document.querySelectorAll('#open-studio').forEach(b=>b.addEventListener('click',()=>enterRealStudio(false)));
  document.querySelectorAll('#open-real-lab').forEach(b=>b.addEventListener('click',()=>{state.page='lab';state.realScene=REAL_SCENES[0].id;render();window.scrollTo(0,0)}));
- document.querySelectorAll('.scene-tab').forEach(b=>b.addEventListener('click',()=>{state.realScene=b.dataset.scene;render()}));
+ document.querySelectorAll('.scene-tab[data-scene]').forEach(b=>b.addEventListener('click',()=>{state.realScene=b.dataset.scene;render()}));
  const realVideo=document.querySelector('#real-video');
  if(realVideo){const missing=document.querySelector('#video-missing');realVideo.addEventListener('loadeddata',()=>missing?.classList.add('hidden'));realVideo.addEventListener('error',()=>missing?.classList.remove('hidden'));realVideo.addEventListener('timeupdate',()=>{const scene=REAL_SCENES.find(item=>item.id===state.realScene)||REAL_SCENES[0];const near=[...scene.moments].reverse().find(item=>item.time<=realVideo.currentTime+.15);const proof=document.querySelector('#live-proof');if(near&&proof)proof.innerHTML=`<b>${near.type}</b><br>${near.evidence} · confidence ${Math.round(near.confidence*100)}%`;});}
+ const studioVideo=document.querySelector('#studio-real-video');
+ if(studioVideo)studioVideo.addEventListener('timeupdate',()=>{if(processRealUntil(studioVideo.currentTime))render()});
  document.querySelectorAll('.moment-jump,.proof-moment').forEach(b=>b.addEventListener('click',()=>{if(realVideo){realVideo.currentTime=Number(b.dataset.time);realVideo.play().catch(()=>{});}}));
  document.querySelector('#back-home')?.addEventListener('click',()=>{clearInterval(state.timer);state.playing=false;state.demo=false;state.overlay=false;state.page='home';render();window.scrollTo(0,0)});
  document.querySelector('#exit-demo')?.addEventListener('click',()=>{state.demo=false;render()});
