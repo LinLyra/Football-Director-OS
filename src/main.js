@@ -430,6 +430,7 @@ function render(){
  const priorVideo=document.querySelector('#studio-real-video');
  const priorTime=priorVideo?.currentTime||0;
  const priorPlaying=Boolean(priorVideo&&!priorVideo.paused);
+ if(priorVideo&&state.page==='studio'&&state.view==='vision')processRealUntil(priorTime);
  document.querySelector('#app').innerHTML=state.page==='home'?landingPage():state.page==='lab'?realLabPage():appHtml();
  bind();
  const video=document.querySelector('#studio-real-video');
