@@ -5,7 +5,7 @@ This checklist summarizes the Microsoft official rules. Re-check the official ru
 ## Required submission materials
 
 - [x] A newly built project responding to the hackathon challenge.
-- [ ] English project pitch/description explaining what was built, the problem, and the Microsoft/Azure technologies used.
+- [x] English project pitch/description explaining what was built, the problem, and the Microsoft/Azure integration boundary.
 - [ ] Demonstration video shorter than 2:00.
 - [ ] Video shows the project functioning on its intended device/platform.
 - [ ] Public video URL on YouTube, Vimeo, Facebook Video or Youku.
@@ -23,14 +23,14 @@ This checklist summarizes the Microsoft official rules. Re-check the official ru
 - [x] Architecture and trust-boundary documentation.
 - [x] Automated frontend build and backend tests.
 - [x] Dockerfile and GitHub Actions workflow.
-- [x] Synthetic data only; no match footage or official club branding.
+- [x] Licensed Pexels footage is credited; no Premier League footage or official club branding.
 - [ ] Replace all submission placeholders with final public URLs.
 - [ ] Confirm repository visibility is **Public**.
 - [ ] Confirm a fresh clone can build from the documented instructions.
 
 ## Product access
 
-- [ ] Prefer a public, no-login judging URL.
+- [x] Public, no-login judging URL is available.
 - [ ] If the project stays private, include valid judge credentials and precise login instructions.
 - [ ] Test the link in a signed-out/incognito browser.
 - [ ] Keep the project available until judging concludes.
@@ -40,11 +40,11 @@ This checklist summarizes the Microsoft official rules. Re-check the official ru
 - [ ] Total runtime is below 1:58 to leave a safety margin.
 - [ ] First 15 seconds state the problem and product promise.
 - [ ] Show natural-language request creation.
-- [ ] Show live event processing and the triggered insight.
-- [ ] Show the three-event evidence chain.
+- [ ] Show real-video event processing and the selected replay moment.
+- [ ] Show the three-candidate evidence chain and automatic clip range.
 - [ ] Show Fan/Analyst or multilingual personalization.
-- [ ] End on the broadcast overlay and Microsoft technology architecture.
-- [ ] Use only original visuals, synthetic data and properly licensed audio.
+- [ ] End on the broadcast overlay and accurately described Microsoft integration boundary.
+- [ ] Use only original visuals, properly licensed footage and properly licensed audio.
 
 ## Submission form
 
