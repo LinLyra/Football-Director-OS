@@ -420,7 +420,15 @@ function bind() {
  const realVideo=document.querySelector('#real-video');
  if(realVideo){const missing=document.querySelector('#video-missing');realVideo.addEventListener('loadeddata',()=>missing?.classList.add('hidden'));realVideo.addEventListener('error',()=>missing?.classList.remove('hidden'));realVideo.addEventListener('timeupdate',()=>{const scene=REAL_SCENES.find(item=>item.id===state.realScene)||REAL_SCENES[0];const near=[...scene.moments].reverse().find(item=>item.time<=realVideo.currentTime+.15);const proof=document.querySelector('#live-proof');if(near&&proof)proof.innerHTML=`<b>${near.type}</b><br>${near.evidence} · confidence ${Math.round(near.confidence*100)}%`;});}
  const studioVideo=document.querySelector('#studio-real-video');
- if(studioVideo)studioVideo.addEventListener('timeupdate',()=>{if(processRealUntil(studioVideo.currentTime))render()});
+ if(studioVideo){
+   const syncDirectorClock=()=>{
+     if(!studioVideo.isConnected)return;
+     if(processRealUntil(studioVideo.currentTime)){render();return}
+     requestAnimationFrame(syncDirectorClock);
+   };
+   studioVideo.addEventListener('timeupdate',()=>{if(processRealUntil(studioVideo.currentTime))render()});
+   requestAnimationFrame(syncDirectorClock);
+ }
  document.querySelectorAll('.moment-jump,.proof-moment').forEach(b=>b.addEventListener('click',()=>{if(realVideo){realVideo.currentTime=Number(b.dataset.time);realVideo.play().catch(()=>{});}}));
  document.querySelector('#back-home')?.addEventListener('click',()=>{clearInterval(state.timer);state.playing=false;state.demo=false;state.overlay=false;state.page='home';render();window.scrollTo(0,0)});
  document.querySelector('#exit-demo')?.addEventListener('click',()=>{state.demo=false;render()});
