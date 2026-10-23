@@ -14,3 +14,20 @@
 
 The source and generated outputs must retain this attribution record. Do not
 replace them with footage whose public-use terms have not been documented.
+
+## Pexels goal-area attack 15448985
+
+- Title: Football Players Trying to Score a Goal during a Match
+- Creator: Luis Quintero
+- Source: https://www.pexels.com/video/football-players-trying-to-score-a-goal-during-a-match-15448985/
+- Source page status: Free to use / Free download
+- License: https://www.pexels.com/license/
+- Downloaded resolution: 1920×1080, 59.94 fps
+- Public demo derivative: 1280×720, 30 fps, first 12 seconds, no audio
+- Intended use: public Director goal-area sequence demonstration
+- Local source path: `cv_data/source/pexels-15448985.mp4`
+- Public processed path: `public/licensed/pexels-15448985/tracked.mp4`
+
+The high-level `GOAL_AREA_ATTACK_VERIFIED` label is a documented human video
+review, while player-cluster and ball-involvement records are derived from the
+published YOLO + ByteTrack run. The UI must preserve this distinction.

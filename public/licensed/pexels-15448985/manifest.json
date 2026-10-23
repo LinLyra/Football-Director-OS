@@ -1,0 +1,42 @@
+{
+  "pipeline": "YOLO object detection + ByteTrack multi-object tracking",
+  "input": "pexels-15448985-demo.mp4",
+  "model": "yolo11n.pt",
+  "classes": [
+    "person",
+    "sports ball"
+  ],
+  "device": "cpu",
+  "source_fps": 30.0,
+  "source_width": 1280,
+  "source_height": 720,
+  "frames_processed": 360,
+  "processing_seconds": 94.23,
+  "effective_fps": 3.82,
+  "detections": 1215,
+  "unique_track_ids": 42,
+  "limitations": [
+    "Generic COCO detections, not a football-specific detector",
+    "Sports-ball recall may be low at broadcast scale",
+    "No automatic team identity",
+    "No semantic pass, shot, or possession inference"
+  ],
+  "per_second_visible_tracks": {
+    "0": 2.03,
+    "1": 1.47,
+    "2": 3.03,
+    "3": 4.67,
+    "4": 3.7,
+    "5": 5.03,
+    "6": 3.77,
+    "7": 4.77,
+    "8": 2.9,
+    "9": 2.23,
+    "10": 2.73,
+    "11": 4.17
+  },
+  "runtime": {
+    "python": "3.9.6",
+    "torch": "2.8.0"
+  }
+}

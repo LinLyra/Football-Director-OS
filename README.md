@@ -2,7 +2,7 @@
 
 > Your match. Your questions. Live answers.
 
-Football Director OS turns a fan's natural-language question into a live, explainable match director. The primary public demo replays genuine CV output from licensed football footage, composes low-level candidates into an evidence-bounded key moment, and produces audience-specific commentary, replay selection and broadcast-ready output.
+Football Director OS turns a fan's natural-language question into a live, explainable match director. The primary public demo combines a human-verified goal-area phase with genuine YOLO + ByteTrack evidence, selects the matching attack, and produces audience-specific commentary, replay selection and broadcast-ready output.
 
 Built for the **Microsoft × Premier League Inside the Game Developer Hackathon**.
 
@@ -12,24 +12,24 @@ Every viewer cares about something different, but traditional broadcasts give ev
 
 ## Demo flow
 
-1. Ask: `Find a high-tempo passage with rapid ball travel and repeated player involvement.`
+1. Ask: `Find an attack near goal that is worth replaying.`
 2. Director compiles the request into a constrained monitoring program.
-3. Ten timestamped candidates from the licensed CV run enter the deterministic temporal engine as the video plays.
-4. A composite window selects a high-tempo passage without claiming unsupported actions such as a shot or goal.
+3. A human-verified goal-area label and timestamped CV candidates enter the deterministic temporal engine as the video plays.
+4. A composite sequence selects the attack without pretending the generic detector recognized an unsupported shot or goal.
 5. Director creates a replay range, commentary cue and broadcast overlay.
 6. The exact source events, tracks, timestamps, confidence and computation remain available for audit in English, Chinese or Spanish.
 
 Use **Watch the 90-second demo** on the homepage for the guided experience. See [DEMO_SCRIPT.md](DEMO_SCRIPT.md) for the submission-video script.
 
-The homepage also opens a **Real Vision Lab**. Its public scene shows the genuine
-YOLO + ByteTrack output for an 18-second Pexels-licensed football clip, all ten
-derived candidates, their confidence and their frame/track evidence.
+The homepage also opens a **Real Vision Lab**. Its public scene shows genuine
+YOLO + ByteTrack output for a 12-second Pexels-licensed goal-area sequence and
+keeps human-verified context visibly separate from CV-derived candidates.
 
 ## Features
 
 - licensed real-video replay with genuine person/ball detections;
-- ten timestamp-synchronized ball-contact and rapid-movement candidates;
-- evidence-bounded semantic composition into a high-tempo Director moment;
+- timestamp-synchronized player-convergence and ball-involvement candidates;
+- evidence-bounded composition with a human-verified goal-area attack label;
 - automatic replay-range selection and commentary cue;
 - optional synthetic event-stream sandbox with passes, shots, tackles, recoveries and pressure;
 - natural-language monitoring instructions;

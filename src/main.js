@@ -1,5 +1,5 @@
 import './styles.css';
-import licensedRun from '../public/licensed/pexels-15448993/events.json';
+import licensedRun from '../public/licensed/pexels-15448985/events.json';
 
 const MATCH = {
   home: { id: 'east', name: 'East United', short: 'EAS', color: '#d6ff4b' },
@@ -38,26 +38,27 @@ const templates = [
 ];
 
 const realTemplates = [
-  'Find a high-tempo passage with rapid ball travel and repeated player involvement.',
-  'Show every rapid ball-movement candidate.',
-  'Notify me when ball-contact confidence is at least 80%.',
+  'Find an attack near goal that is worth replaying.',
+  'Show me when players converge around the ball.',
+  'Notify me when the ball becomes involved in the attacking phase.',
 ];
 
 const realEvents = licensedRun.events.map(event => {
-  const contact = event.type === 'BALL_CONTACT_CANDIDATE';
   const evidence = event.evidence;
   return {
     id:event.id, time:event.timestamp_seconds, type:event.type, frame:event.frame,
     confidence:event.confidence, status:event.status, real:true, evidence,
-    player:contact && evidence.nearest_player_track_id ? `Track P${evidence.nearest_player_track_id}` : 'Tracked ball',
-    evidenceText:contact
-      ? `Ball track ${evidence.ball_detection_track_id} · nearest player P${evidence.nearest_player_track_id} · ${evidence.supporting_frames.length} supporting frames`
-      : `Frames ${evidence.start_frame}–${evidence.end_frame} · displacement ${evidence.normalized_displacement} · threshold ${evidence.threshold}`,
+    player:event.type==='BALL_INVOLVEMENT_CANDIDATE'?'Tracked ball':'Visible players',
+    evidenceText:event.type==='GOAL_AREA_ATTACK_VERIFIED'
+      ? 'Goal visible · attacking phase confirmed by video review'
+      : event.type==='PLAYER_CLUSTER_CANDIDATE'
+        ? `${evidence.person_boxes} player detections converge · YOLO + ByteTrack`
+        : `Ball track ${evidence.ball_track_id} · ${evidence.supporting_frames} supporting frames`,
   };
 });
 
 const REAL_SCENES = [
-  {id:'pexels-15448993', sequence:'PUBLIC DEMO', title:'Licensed match tracking', story:'A real match clip is tracked frame by frame, then all 10 candidates are replayed through the Director rule engine.', video:'/licensed/pexels-15448993/tracked.mp4', ball:'73.7%', tracks:'3,183', events:10, licensed:true, duration:18, moments:realEvents.map(event=>({time:event.time,type:event.type.replaceAll('_',' '),confidence:event.confidence,evidence:event.evidenceText}))},
+  {id:'pexels-15448985', sequence:'PUBLIC DEMO', title:'Goal-area attack', story:'Director combines a human-verified attacking phase with real player and ball tracking to select a replay beside goal.', video:'/licensed/pexels-15448985/tracked.mp4', ball:'11 frames', tracks:'1,204', events:3, licensed:true, duration:12, moments:realEvents.map(event=>({time:event.time,type:event.type.replaceAll('_',' '),confidence:event.confidence,evidence:event.evidenceText}))},
   {id:'snmot-101', sequence:'SNMOT-101', title:'Goal threat', story:'Rapid progression produces a shot-level threat.', video:'/demo-scenes/snmot-101.mp4', ball:1, tracks:'11 : 8', events:16, moments:[
     {time:7.64,type:'RAPID PROGRESSION',confidence:.74,evidence:'Ball track 1 · frames 167–192 · displacement 0.1678'},
     {time:23.96,type:'SHOT CANDIDATE',confidence:.70,evidence:'Ball track 1 · frames 595–600 · speed 0.0751'},
@@ -75,7 +76,7 @@ const REAL_SCENES = [
 const state = {
   time: 0, speed: 2, playing: false, timer: null, cursor: 0, score: [0,0],
   mode: 'casual', selectedInsight: null, compile: null, compiling: false,
-  programs: [], insights: [], processed: [], language:'en', overlay:false, demo:false, page:'home', view:'vision', realScene:'pexels-15448993',
+  programs: [], insights: [], processed: [], language:'en', overlay:false, demo:false, page:'home', view:'vision', realScene:'pexels-15448985',
   realCursor:0, realLastTime:0, replayUntil:null,
 };
 
@@ -117,26 +118,22 @@ function compileIntent(text) {
 
 function compileRealIntent(text) {
   const lower=text.toLowerCase();
-  if (/tempo|passage|involvement|story|节奏|片段/.test(lower)) return {
-    status:'valid', name:'High-tempo passage director', kind:'real_story', window:6, contactThreshold:2, movementThreshold:1,
-    summary:'Select a passage containing rapid ball travel and repeated player involvement', provider:'real-cv-deterministic-adapter',
-    json:{operator:'COMPOSITE_WINDOW',window_seconds:6,conditions:[{event_type:'BALL_CONTACT_CANDIDATE',minimum:2},{event_type:'RAPID_BALL_MOVEMENT_CANDIDATE',minimum:1}],output:'DIRECTOR_MOMENT',source:'licensed_cv_run'}
+  if (/attack|goal|replay|进攻|球门|回放/.test(lower)) return {
+    status:'valid', name:'Goal-area attack director', kind:'real_story', window:4,
+    summary:'Select an attack beside goal when verified scene context, player convergence and ball involvement align', provider:'real-cv-deterministic-adapter',
+    json:{operator:'COMPOSITE_SEQUENCE',window_seconds:4,conditions:[{event_type:'GOAL_AREA_ATTACK_VERIFIED',minimum:1},{event_type:'PLAYER_CLUSTER_CANDIDATE',minimum:1},{event_type:'BALL_INVOLVEMENT_CANDIDATE',minimum:1}],output:'DIRECTOR_REPLAY',source:'licensed_cv_plus_verified_annotation'}
   };
-  if (/rapid|fast|movement|移动|快速/.test(lower)) return {
-    status:'valid', name:'Rapid ball movement', kind:'real_event', eventType:'RAPID_BALL_MOVEMENT_CANDIDATE',
-    summary:'Trigger on every evidence-linked rapid ball-movement candidate', provider:'real-cv-deterministic-adapter',
-    json:{operator:'EVENT_MATCH',filter:{event_type:'RAPID_BALL_MOVEMENT_CANDIDATE',status:'candidate'},source:'licensed_cv_run'}
+  if (/converge|players|cluster|球员|聚集/.test(lower)) return {
+    status:'valid', name:'Player convergence', kind:'real_event', eventType:'PLAYER_CLUSTER_CANDIDATE',
+    summary:'Trigger when multiple tracked players converge during the phase', provider:'real-cv-deterministic-adapter',
+    json:{operator:'EVENT_MATCH',filter:{event_type:'PLAYER_CLUSTER_CANDIDATE',status:'candidate'},source:'licensed_cv_run'}
   };
-  if (/confidence|80|置信/.test(lower)) return {
-    status:'valid', name:'High-confidence ball contact', kind:'real_confidence', eventType:'BALL_CONTACT_CANDIDATE', threshold:.8,
-    summary:'Ball-contact candidate with confidence ≥ 80%', provider:'real-cv-deterministic-adapter',
-    json:{operator:'CONFIDENCE_THRESHOLD',filter:{event_type:'BALL_CONTACT_CANDIDATE'},threshold:.8,source:'licensed_cv_run'}
+  if (/ball|involve|足球|参与/.test(lower)) return {
+    status:'valid', name:'Ball involvement', kind:'real_event', eventType:'BALL_INVOLVEMENT_CANDIDATE',
+    summary:'Trigger when the tracked ball persists through the attacking phase', provider:'real-cv-deterministic-adapter',
+    json:{operator:'EVENT_MATCH',filter:{event_type:'BALL_INVOLVEMENT_CANDIDATE',status:'candidate'},source:'licensed_cv_run'}
   };
-  return {
-    status:'valid', name:'Repeated ball involvement', kind:'real_count', eventType:'BALL_CONTACT_CANDIDATE', threshold:2, window:10,
-    summary:'2 ball-contact candidates inside a rolling 10-second window', provider:'real-cv-deterministic-adapter',
-    json:{operator:'COUNT_THRESHOLD',filter:{event_type:'BALL_CONTACT_CANDIDATE',status:'candidate'},window_seconds:10,threshold:2,source:'licensed_cv_run'}
-  };
+  return {status:'clarify',reason:'This public clip supports goal-area attack, player-convergence and ball-involvement briefs.',suggestion:realTemplates[0],provider:'real-cv-deterministic-adapter'};
 }
 
 function normalizeApiProgram(payload, original) {
@@ -149,14 +146,16 @@ function normalizeApiProgram(payload, original) {
   };
   const p = payload.program;
   const base = {status:'valid', name:p.name, original, json:p, provider:payload.provider};
+  if (p.operator === 'COMPOSITE_SEQUENCE' && p.output === 'DIRECTOR_REPLAY') return {...base,kind:'real_story',window:p.window_seconds||4,summary:'Select an attack beside goal when verified scene context, player convergence and ball involvement align'};
+  if (p.operator === 'EVENT_MATCH' && p.filter?.event_type === 'PLAYER_CLUSTER_CANDIDATE') return {...base,kind:'real_event',eventType:p.filter.event_type,summary:'Trigger when multiple tracked players converge during the phase'};
+  if (p.operator === 'EVENT_MATCH' && p.filter?.event_type === 'BALL_INVOLVEMENT_CANDIDATE') return {...base,kind:'real_event',eventType:p.filter.event_type,summary:'Trigger when the tracked ball persists through the attacking phase'};
   if (p.operator === 'ORDERED_SEQUENCE') return {...base, kind:'sequence', team:p.sequence[0].team_id, gap:p.sequence_max_gap_seconds, summary:`${team(p.sequence[0].team_id).name} recovers possession, then shoots within ${p.sequence_max_gap_seconds} seconds`};
   if (p.operator === 'EVENT_MATCH') return {...base, kind:'player_shot', player:'Player 7', summary:'Trigger on every shot involving Player 7'};
   return {...base, kind:'count', eventType:p.filter.event_type, team:p.filter.team_id, region:p.filter.pitch_region, threshold:p.threshold, window:p.window_seconds, summary:p.filter.event_type==='SHOT' ? `${p.threshold} shots by either team inside a rolling ${p.window_seconds/60}-minute window` : `${team(p.filter.team_id).name}: ${p.threshold} attacking-third recoveries inside ${p.window_seconds/60} minutes`};
 }
 
 async function compileWithProvider(text) {
-  if (state.view === 'vision') return {...compileRealIntent(text), original:text};
-  if (!API_BASE) return {...compileIntent(text), original:text, provider:'browser-safe-fallback'};
+  if (isLocalPreview && state.view === 'vision') return {...compileRealIntent(text), original:text};
   const controller = new AbortController();
   const timeout = setTimeout(()=>controller.abort(), 2500);
   try {
@@ -179,22 +178,18 @@ function resetRealRun() {
 }
 
 function emitRealInsight(p,evidence,values) {
-  const title=p.kind==='real_story'?'High-tempo passage selected':p.kind==='real_event'?'Rapid ball movement detected':p.kind==='real_confidence'?'High-confidence ball contact':'Repeated ball involvement detected';
+  const title=p.kind==='real_story'?'Goal-area attack selected':p.eventType==='PLAYER_CLUSTER_CANDIDATE'?'Players converge near goal':'Ball involvement detected';
   const casual=p.kind==='real_story'
-    ? `Director selected this passage because rapid ball travel was followed by repeated player involvement. It is ready as a replay or commentary cue.`
+    ? `Director selected this attack because play moved beside goal, multiple players converged, and the tracked ball stayed involved. It is ready for replay.`
     : p.kind==='real_event'
-    ? `The tracked ball moved rapidly across ${values.frames} frames. The moment is linked directly to the CV run.`
-    : p.kind==='real_confidence'
-      ? `A player-ball proximity pattern crossed the ${Math.round(p.threshold*100)}% confidence threshold.`
-      : `${values.count} ball-contact candidates occurred inside ${values.window} seconds. This is a candidate pattern, not asserted ground truth.`;
+    ? `Director found the requested visual signal and linked it to the processed video evidence.`
+    : `Director found the requested visual signal in the attacking phase.`;
   const analyst=p.kind==='real_story'
-    ? `COMPOSITE_WINDOW: contacts=${values.contacts}, rapid_movements=${values.movements}, window=${values.window}s. Semantic label is evidence-bounded.`
+    ? `COMPOSITE_SEQUENCE: verified_attack=${values.verifiedAttack}, player_cluster=${values.playerCluster}, ball_involvement=${values.ballInvolvement}, window=${values.window}s.`
     : p.kind==='real_event'
-    ? `RAPID_BALL_MOVEMENT_CANDIDATE: displacement=${values.displacement}, threshold=${values.threshold}, frames=${values.frames}.`
-    : p.kind==='real_confidence'
-      ? `BALL_CONTACT_CANDIDATE: confidence=${Math.round(values.confidence*100)}%, threshold=${Math.round(p.threshold*100)}%.`
-      : `COUNT(BALL_CONTACT_CANDIDATE)=${values.count} in rolling ${values.window}s; threshold=${p.threshold}.`;
-  const clipStart=Math.max(0,evidence[0].time-1),clipEnd=Math.min(18,evidence[evidence.length-1].time+2);
+    ? `${p.eventType}: confidence=${Math.round(evidence[0].confidence*100)}%, frame=${evidence[0].frame}.`
+    : `${evidence[0].type}: frame=${evidence[0].frame}.`;
+  const clipStart=Math.max(0,evidence[0].time-1.8),clipEnd=Math.min(12,evidence[evidence.length-1].time+1.5);
   state.insights.unshift({id:`real_ins_${evidence[evidence.length-1].id}`,time:state.time,programId:p.id,title,casual,analyst,evidence,values,clipStart,clipEnd,verified:true,candidate:true,directorMoment:p.kind==='real_story'});
   state.selectedInsight=state.insights[0].id;
 }
@@ -203,18 +198,13 @@ function evaluateReal(event) {
   state.programs.filter(p=>p.active).forEach(p=>{
     if(p.kind==='real_story'){
       const evidence=state.processed.filter(item=>item.time>=event.time-p.window);
-      const contacts=evidence.filter(item=>item.type==='BALL_CONTACT_CANDIDATE').length;
-      const movements=evidence.filter(item=>item.type==='RAPID_BALL_MOVEMENT_CANDIDATE').length;
-      if(contacts>=p.contactThreshold&&movements>=p.movementThreshold&&!p.conditionActive){p.conditionActive=true;emitRealInsight(p,evidence,{contacts,movements,window:p.window})}
-      if(contacts<p.contactThreshold||movements<p.movementThreshold)p.conditionActive=false;
+      const verifiedAttack=evidence.some(item=>item.type==='GOAL_AREA_ATTACK_VERIFIED');
+      const playerCluster=evidence.some(item=>item.type==='PLAYER_CLUSTER_CANDIDATE');
+      const ballInvolvement=evidence.some(item=>item.type==='BALL_INVOLVEMENT_CANDIDATE');
+      if(verifiedAttack&&playerCluster&&ballInvolvement&&!p.conditionActive){p.conditionActive=true;emitRealInsight(p,evidence,{verifiedAttack,playerCluster,ballInvolvement,window:p.window})}
+      if(!verifiedAttack||!playerCluster||!ballInvolvement)p.conditionActive=false;
     }
-    if(p.kind==='real_event'&&event.type===p.eventType) emitRealInsight(p,[event],{frames:event.evidence.end_frame-event.evidence.start_frame,displacement:event.evidence.normalized_displacement,threshold:event.evidence.threshold});
-    if(p.kind==='real_confidence'&&event.type===p.eventType&&event.confidence>=p.threshold) emitRealInsight(p,[event],{confidence:event.confidence,threshold:p.threshold});
-    if(p.kind==='real_count'){
-      const evidence=state.processed.filter(item=>item.type===p.eventType&&item.time>=event.time-p.window);
-      if(evidence.length>=p.threshold&&!p.conditionActive){p.conditionActive=true;emitRealInsight(p,evidence,{count:evidence.length,window:p.window})}
-      if(evidence.length<p.threshold)p.conditionActive=false;
-    }
+    if(p.kind==='real_event'&&event.type===p.eventType) emitRealInsight(p,[event],{eventType:event.type,frame:event.frame});
   });
 }
 
@@ -286,20 +276,20 @@ function renderPitch() {
 function renderVision() {
   const moment=state.insights.find(item=>item.directorMoment);
   return `<div class="vision-stage real-feed" aria-label="Real licensed football video processed by YOLO and ByteTrack">
-    <video id="studio-real-video" src="/licensed/pexels-15448993/tracked.mp4" autoplay muted loop playsinline preload="auto"></video>
+    <video id="studio-real-video" src="/licensed/pexels-15448985/tracked.mp4" autoplay muted loop playsinline preload="auto"></video>
     <div class="vision-vignette"></div>
     <div class="vision-hud top-left"><span><i></i> DIRECTOR IS WATCHING</span><b>REAL VIDEO</b></div>
     <div class="vision-hud top-right"><b>LIVE ANALYSIS</b><b>LICENSED FOOTAGE</b></div>
     <div class="vision-event"><span>${state.processed.length} MOMENT SIGNALS SEEN</span><b>${state.insights.length?'REPLAY READY':'LOOKING FOR YOUR BRIEF'}</b></div>
-    ${moment?`<div class="moment-callout"><span>✓ MOMENT FOUND</span><strong>Worth a replay</strong><p>Fast ball movement + repeated player involvement</p><button id="replay-moment">PLAY THE MOMENT ↺</button></div>`:''}
-    <div class="vision-disclosure">REAL MATCH FOOTAGE · 3,183 PERSON DETECTIONS · 795 BALL FRAMES · LUIS QUINTERO / PEXELS</div>
+    ${moment?`<div class="moment-callout"><span>✓ ATTACK FOUND</span><strong>Goal-area replay ready</strong><p>Attack beside goal + player convergence + tracked ball</p><button id="replay-moment">PLAY THE ATTACK ↺</button></div>`:''}
+    <div class="vision-disclosure">REAL MATCH FOOTAGE · 1,204 PERSON DETECTIONS · VERIFIED ATTACK LABEL + CV EVIDENCE · LUIS QUINTERO / PEXELS</div>
   </div>`;
 }
 
 function sourcePipeline() {
   return `<div class="source-pipeline">
-    <div><span>01</span><b>WATCHES THE VIDEO</b><small>Real licensed match footage</small></div><i>→</i>
-    <div><span>02</span><b>UNDERSTANDS MOVEMENT</b><small>Tracks players and ball</small></div><i>→</i>
+    <div><span>01</span><b>WATCHES THE ATTACK</b><small>Real licensed match footage</small></div><i>→</i>
+    <div><span>02</span><b>READS THE EVIDENCE</b><small>Verified context + CV tracks</small></div><i>→</i>
     <div class="live"><span>03</span><b>FINDS THE STORY</b><small>Your brief runs live</small></div><i>→</i>
     <div><span>04</span><b>PREPARES THE REPLAY</b><small>Clip + commentary + proof</small></div>
   </div>`;
@@ -312,44 +302,44 @@ function programCard(p) { return `<article class="program-card ${p.active?'activ
 
 function translatedInsight(i) {
   if(i.candidate&&state.language==='zh') return i.directorMoment
-    ? {title:'已选中高节奏比赛片段',text:'导演系统发现快速球移动后连续出现球员参与，因此将这一段选为可用于回放和解说的关键片段。'}
-    : {title:i.title==='Repeated ball involvement detected'?'检测到连续触球候选':'检测到快速球移动',text:i.casual};
+    ? {title:'已选中门前进攻片段',text:'导演系统结合经过核验的门前进攻、球员聚集和足球跟踪证据，将这一段准备为回放。'}
+    : {title:i.title==='Players converge near goal'?'检测到门前球员聚集':'检测到足球参与',text:i.casual};
   if(i.candidate&&state.language==='es') return i.directorMoment
-    ? {title:'Pasaje de alta intensidad seleccionado',text:'Director seleccionó este tramo porque el movimiento rápido del balón fue seguido por participación repetida de jugadores.'}
-    : {title:i.title==='Repeated ball involvement detected'?'Participación repetida del balón detectada':'Movimiento rápido del balón detectado',text:i.casual};
+    ? {title:'Ataque cerca de la portería seleccionado',text:'Director combinó el contexto verificado del ataque con la convergencia de jugadores y la evidencia de seguimiento del balón.'}
+    : {title:i.title==='Players converge near goal'?'Jugadores convergen cerca de la portería':'Participación del balón detectada',text:i.casual};
   if(state.language==='zh') return {title:i.title==='High press is producing turnovers'?'高位压迫正在制造转换':i.title==='Rapid transition detected'?'发现快速攻防转换':i.title.includes('takes a shot')?'关键球员完成射门':'比赛正在变得开放', text:i.title==='High press is producing turnovers'?'东部联队在五分钟内三次于前场夺回球权，他们的压迫已经开始破坏对手的组织。':i.title==='Rapid transition detected'?'夺回球权后立刻形成射门——反抢正在持续制造威胁。':i.casual};
   if(state.language==='es') return {title:i.title==='High press is producing turnovers'?'La presión alta genera transiciones':i.title==='Rapid transition detected'?'Transición rápida detectada':i.title.includes('takes a shot')?'Disparo del jugador clave':'El partido se abre', text:i.title==='High press is producing turnovers'?'East United recuperó el balón tres veces en campo rival. Su presión ya está alterando la salida del oponente.':i.title==='Rapid transition detected'?'La recuperación se convirtió inmediatamente en disparo: la contrapresión está creando peligro.':i.casual};
   return {title:i.title,text:state.mode==='casual'?i.casual:i.analyst};
 }
 
 function insightCard(i) { const copy=translatedInsight(i); return `<button class="insight-card ${state.selectedInsight===i.id?'selected':''}" data-id="${i.id}">
-  <span class="insight-time">${fmt(i.time)}</span><div><strong>${esc(copy.title)}</strong><p>${esc(copy.text)}</p><small><span class="verified">✓ ${i.candidate?'Evidence-linked candidate':'Verified'}</span> · ${i.evidence.length} source event${i.evidence.length===1?'':'s'}</small></div>
+  <span class="insight-time">${fmt(i.time)}</span><div><strong>${esc(copy.title)}</strong><p>${esc(copy.text)}</p><small><span class="verified">✓ ${i.directorMoment?'Verified context + CV evidence':i.candidate?'Evidence-linked candidate':'Verified'}</span> · ${i.evidence.length} source event${i.evidence.length===1?'':'s'}</small></div>
  </button>`; }
 
 function evidencePanel() {
   const i=state.insights.find(x=>x.id===state.selectedInsight);
   if(!i) return `<div class="empty-evidence"><span>◎</span><h3>Director is watching</h3><p>When a moment matches your brief, the replay and explanation will appear here automatically.</p></div>`;
   const p=state.programs.find(x=>x.id===i.programId);
-  return `<div class="evidence-head human-result"><div><span class="eyebrow">DIRECTOR FOUND A MOMENT</span><h3>${esc(translatedInsight(i).title)}</h3><p>${esc(translatedInsight(i).text)}</p></div></div>
+  return `<div class="evidence-head human-result"><div><span class="eyebrow">DIRECTOR FOUND AN ATTACK</span><h3>${esc(translatedInsight(i).title)}</h3><p>${esc(translatedInsight(i).text)}</p></div></div>
   ${i.directorMoment?`<div class="director-treatment"><span>READY TO USE</span><strong>A ${Math.round(i.clipEnd-i.clipStart)}-second replay with commentary</strong><p>Selected from ${i.clipStart.toFixed(2)}s to ${i.clipEnd.toFixed(2)}s</p><button id="replay-moment">▶ PLAY KEY MOMENT</button></div>`:''}
   <button class="broadcast-btn" id="show-broadcast">CREATE LIVE GRAPHIC <span>↗</span></button>
   <details class="technical-proof"><summary>Why did Director choose this?</summary><p>${esc(p?.summary||'')}</p><code>${esc(JSON.stringify(i.values))}</code><div class="evidence-events">${i.evidence.map(e=>`<div><span>${e.real?`${e.time.toFixed(2)}s`:fmt(e.time)}</span><strong>${eventLabel(e)}</strong><small>${e.real?esc(`${e.evidenceText} · confidence ${Math.round(e.confidence*100)}%`):`${esc(e.player)} · ${region(e)} · (${e.x??'—'}, ${e.y??'—'})`}</small></div>`).join('')}</div></details>`;
 }
 
-function demoStep(){return state.view==='vision'?(state.time<1.5?0:state.time<2.45?1:state.insights.length?3:2):(state.time<64?0:state.time<151?1:state.time<232?2:3)}
+function demoStep(){return state.view==='vision'?(state.time<2.8?0:state.time<3.5?1:state.insights.length?3:2):(state.time<64?0:state.time<151?1:state.time<232?2:3)}
 function demoRail(){const steps=['Brief the AI','Watch the match','Detect the pattern','Explain the moment'];return `<div class="demo-rail"><span>LIVE DEMO</span>${steps.map((s,i)=>`<div class="${demoStep()>=i?'done':''} ${demoStep()===i?'now':''}"><i>${demoStep()>i?'✓':i+1}</i>${s}</div>`).join('')}<button id="exit-demo">EXIT</button></div>`}
-function broadcastOverlay(){const i=state.insights.find(x=>x.id===state.selectedInsight)||state.insights[0];if(!state.overlay||!i)return'';const c=translatedInsight(i);return `<div class="broadcast" role="dialog" aria-label="Broadcast overlay preview"><button id="close-broadcast">×</button><div class="broadcast-top"><span><i></i> DIRECTOR LIVE</span><b>${i.candidate?'REAL CV FEED':`${MATCH.home.short} ${state.score[0]} — ${state.score[1]} ${MATCH.away.short}`}</b><time>${fmt(state.time)}</time></div><div class="broadcast-stage"><span class="broadcast-kicker">${i.directorMoment?'AUTO-SELECTED REPLAY':'AI MATCH INTELLIGENCE'}</span><h2>${esc(c.title)}</h2><p>${esc(c.text)}</p><div class="broadcast-proof"><span>✓ ${i.candidate?'EVIDENCE-LINKED':'VERIFIED'}</span><b>${i.evidence.length} EVENT${i.evidence.length===1?'':'S'} ANALYSED</b><em>DIRECTOR/OS</em></div></div><div class="broadcast-caption">READY FOR LIVE PRODUCTION · 16:9 SAFE AREA · ${state.language.toUpperCase()}</div></div>`}
+function broadcastOverlay(){const i=state.insights.find(x=>x.id===state.selectedInsight)||state.insights[0];if(!state.overlay||!i)return'';const c=translatedInsight(i);return `<div class="broadcast" role="dialog" aria-label="Broadcast overlay preview"><button id="close-broadcast">×</button><div class="broadcast-top"><span><i></i> DIRECTOR LIVE</span><b>${i.candidate?'REAL VIDEO EVIDENCE':`${MATCH.home.short} ${state.score[0]} — ${state.score[1]} ${MATCH.away.short}`}</b><time>${fmt(state.time)}</time></div><div class="broadcast-stage"><span class="broadcast-kicker">${i.directorMoment?'AUTO-SELECTED ATTACK':'AI MATCH INTELLIGENCE'}</span><h2>${esc(c.title)}</h2><p>${esc(c.text)}</p><div class="broadcast-proof"><span>✓ ${i.directorMoment?'PROVENANCE CHECKED':i.candidate?'EVIDENCE-LINKED':'VERIFIED'}</span><b>${i.evidence.length} EVENT${i.evidence.length===1?'':'S'} ANALYSED</b><em>DIRECTOR/OS</em></div></div><div class="broadcast-caption">READY FOR LIVE PRODUCTION · 16:9 SAFE AREA · ${state.language.toUpperCase()}</div></div>`}
 
 function landingPage(){return `
  <div class="landing">
   <header class="landing-nav"><a class="brand" href="#"><span class="brand-mark"><i></i><i></i><i></i></span><span>DIRECTOR<span class="brand-muted">/OS</span></span></a><div><span class="prototype-pill">LIVE PROTOTYPE</span><button id="open-studio" class="nav-studio">OPEN STUDIO <span>↗</span></button></div></header>
   <main class="landing-main">
    <section class="landing-hero">
-    <div class="landing-copy"><span class="kicker">AN AI DIRECTOR FOR EVERY VIEWER</span><h1>Tell us what matters.<br><em>We find the moment.</em></h1><p>Director watches a real football video, finds the passage that matches your request, and prepares a replay with commentary—automatically.</p><div class="landing-actions"><button id="run-demo" class="primary-cta"><span>▶</span> SEE A REAL EXAMPLE</button><button id="open-real-lab" class="secondary-cta">HOW THE VIDEO WAS ANALYSED →</button></div><small>REAL LICENSED VIDEO · AUTOMATIC MOMENT SELECTION · EXPLAINABLE RESULTS</small></div>
-    <div class="story-card" aria-label="How Director finds a replay-worthy moment"><div class="story-head"><span><i></i> ONE SIMPLE BRIEF</span><b>REAL VIDEO</b></div><div class="fan-question"><span>YOU ASK</span><p>“Find a high-tempo passage worth replaying.”</p></div><div class="story-flow"><div><i>1</i><span>Watches the video</span></div><b>→</b><div><i>2</i><span>Finds the pattern</span></div><b>→</b><div class="active"><i>3</i><span>Prepares the replay</span></div></div><div class="answer-card"><span class="verified-mark">✓ MOMENT FOUND</span><h2>Here is the replay.</h2><p>Rapid ball movement was followed by repeated player involvement.</p><div class="evidence-dots"><span>6-second clip</span><span>Commentary ready</span><span>Evidence attached</span></div></div></div>
+    <div class="landing-copy"><span class="kicker">AN AI DIRECTOR FOR EVERY VIEWER</span><h1>Tell us what matters.<br><em>We find the moment.</em></h1><p>Director watches a real football video, finds the attack that matches your request, and prepares a replay with commentary—automatically.</p><div class="landing-actions"><button id="run-demo" class="primary-cta"><span>▶</span> SEE A REAL ATTACK</button><button id="open-real-lab" class="secondary-cta">HOW THE VIDEO WAS ANALYSED →</button></div><small>REAL LICENSED VIDEO · AUTOMATIC REPLAY SELECTION · EXPLAINABLE RESULTS</small></div>
+    <div class="story-card" aria-label="How Director finds a replay-worthy attack"><div class="story-head"><span><i></i> ONE SIMPLE BRIEF</span><b>REAL VIDEO</b></div><div class="fan-question"><span>YOU ASK</span><p>“Find an attack near goal worth replaying.”</p></div><div class="story-flow"><div><i>1</i><span>Watches the attack</span></div><b>→</b><div><i>2</i><span>Checks the evidence</span></div><b>→</b><div class="active"><i>3</i><span>Prepares the replay</span></div></div><div class="answer-card"><span class="verified-mark">✓ ATTACK FOUND</span><h2>Here is the goal-area replay.</h2><p>Play developed beside goal as players converged around the tracked ball.</p><div class="evidence-dots"><span>7-second clip</span><span>Commentary ready</span><span>Evidence attached</span></div></div></div>
    </section>
    <section class="value-strip"><span>YOUR BRIEF</span><b>→</b><span>DIRECTOR WATCHES</span><b>→</b><span>KEY MOMENT FOUND</span><b>→</b><span>REPLAY READY</span></section>
-   <section class="landing-proof"><div><span class="proof-num">01</span><h3>Say what you want</h3><p>Ask for a high-tempo passage, rapid movement, or another supported pattern.</p></div><div><span class="proof-num">02</span><h3>Get the moment</h3><p>Director selects the exact clip and explains in plain language what it observed.</p></div><div><span class="proof-num">03</span><h3>Use it instantly</h3><p>Replay it, change language, or turn it into a live broadcast graphic.</p></div></section>
+   <section class="landing-proof"><div><span class="proof-num">01</span><h3>Say what you want</h3><p>Ask for an attack near goal, player convergence, or visible ball involvement.</p></div><div><span class="proof-num">02</span><h3>Get the attack</h3><p>Director selects the exact clip and explains in plain language what it observed.</p></div><div><span class="proof-num">03</span><h3>Use it instantly</h3><p>Replay it, change language, or turn it into a live broadcast graphic.</p></div></section>
    <section class="landing-final"><span>BUILT FOR THE MICROSOFT × PREMIER LEAGUE HACKATHON</span><h2>Football intelligence should feel personal.<br><em>And prove every word.</em></h2><button id="run-demo" class="primary-cta"><span>▶</span> SEE IT IN ACTION</button></section>
   </main><footer class="landing-footer"><span>DIRECTOR/OS · AGENTIC MATCH INTELLIGENCE</span><span>REAL LICENSED VIDEO · EVIDENCE-LINKED OUTPUT</span></footer>
  </div>`}
@@ -358,11 +348,11 @@ function realLabPage(){const selected=REAL_SCENES[0];return `
  <div class="real-lab">
   <header><button id="back-home" class="brand"><span class="brand-mark"><i></i><i></i><i></i></span><span>DIRECTOR<span class="brand-muted">/OS</span></span></button><nav><span class="lab-pill"><i></i> REAL VISION LAB</span><button id="open-studio" class="nav-studio">OPEN LIVE STUDIO ↗</button></nav></header>
   <main class="lab-main">
-   <section class="lab-head"><div><span class="kicker">REAL FRAMES · REAL TRACKS · EXPLAINABLE CANDIDATES</span><h1>Real footage.<br><em>Evidence on every frame.</em></h1></div><p>This public scene runs genuine YOLO + ByteTrack on Pexels-licensed footage. All 10 timestamped candidates are now replayed into the same rule engine used by the live studio.</p></section>
+   <section class="lab-head"><div><span class="kicker">REAL FRAMES · VERIFIED CONTEXT · EXPLAINABLE CV</span><h1>Real attack.<br><em>Evidence behind the replay.</em></h1></div><p>The goal-area phase is human verified; player convergence and ball involvement come from the published YOLO + ByteTrack run. Director keeps both evidence sources visibly distinct.</p></section>
    <section class="scene-tabs"><div class="scene-tab on"><span>${selected.sequence}</span><strong>${selected.title}</strong><small>${selected.events} public candidates · playable</small></div><div class="run-route"><span>01 REAL VIDEO</span><b>→</b><span>02 10 CV EVENTS</span><b>→</b><span>03 RULE ENGINE</span><b>→</b><span>04 EXPLAINED OUTPUT</span></div></section>
    <section class="lab-grid">
     <div class="real-player panel"><div class="panel-label"><span>01</span><strong>${selected.title.toUpperCase()}</strong><small>${selected.licensed?'Pexels licensed public asset · Luis Quintero':`${selected.sequence} · authorized local research asset`}</small></div><div class="video-shell"><video id="real-video" controls playsinline preload="metadata" src="${selected.video}"></video><div class="video-missing" id="video-missing"><span>LOCAL ASSET REQUIRED</span><strong>Research footage is intentionally excluded from the public repository.</strong><p>Select “Licensed match tracking” for the public playable scene.</p></div></div><div class="real-timeline">${selected.moments.map(moment=>`<button class="moment-jump" data-time="${moment.time}"><i style="left:${moment.time/(selected.duration||30)*100}%"></i><span>${moment.time.toFixed(2)}s</span><strong>${moment.type}</strong></button>`).join('')}</div></div>
-    <aside class="lab-proof panel"><div class="panel-label"><span>02</span><strong>RUN EVIDENCE</strong><small>Not model theatre</small></div><div class="lab-story"><span>DIRECTOR STORY</span><h2>${selected.story}</h2><p id="live-proof">Play the clip or select a detected moment.</p></div><div class="run-metrics"><div><span>${selected.licensed?'BALL COVERAGE':'BALL TRACK'}</span><strong>${selected.ball}</strong></div><div><span>${selected.licensed?'PERSON BOXES':'TEAM CLUSTERS'}</span><strong>${selected.tracks}</strong></div><div><span>CANDIDATES</span><strong>${selected.events}</strong></div></div><div class="moment-list">${selected.moments.map((moment,index)=>`<button class="proof-moment" data-index="${index}" data-time="${moment.time}"><time>${moment.time.toFixed(2)}s</time><div><strong>${moment.type}</strong><p>${moment.evidence}</p></div><span>${Math.round(moment.confidence*100)}%</span></button>`).join('')}</div><div class="candidate-note">CANDIDATE ≠ GROUND TRUTH<br><span>Low-confidence semantic outputs are labelled or withheld.</span></div>${selected.licensed?'<a class="asset-credit" href="https://www.pexels.com/video/football-players-kicking-the-ball-during-a-match-15448993/" target="_blank" rel="noreferrer">VIDEO: LUIS QUINTERO / PEXELS ↗</a>':''}</aside>
+    <aside class="lab-proof panel"><div class="panel-label"><span>02</span><strong>RUN EVIDENCE</strong><small>Not model theatre</small></div><div class="lab-story"><span>DIRECTOR STORY</span><h2>${selected.story}</h2><p id="live-proof">Play the clip or select an evidence moment.</p></div><div class="run-metrics"><div><span>TRACKED BALL</span><strong>${selected.ball}</strong></div><div><span>PERSON BOXES</span><strong>${selected.tracks}</strong></div><div><span>EVIDENCE EVENTS</span><strong>${selected.events}</strong></div></div><div class="moment-list">${selected.moments.map((moment,index)=>`<button class="proof-moment" data-index="${index}" data-time="${moment.time}"><time>${moment.time.toFixed(2)}s</time><div><strong>${moment.type}</strong><p>${moment.evidence}</p></div><span>${Math.round(moment.confidence*100)}%</span></button>`).join('')}</div><div class="candidate-note">VERIFIED LABEL + CV CANDIDATES<br><span>Evidence provenance is preserved instead of presenting every label as model ground truth.</span></div>${selected.licensed?'<a class="asset-credit" href="https://www.pexels.com/video/football-players-trying-to-score-a-goal-during-a-match-15448985/" target="_blank" rel="noreferrer">VIDEO: LUIS QUINTERO / PEXELS ↗</a>':''}</aside>
    </section>
   </main><footer><span>Pexels licensed public demo · complete replayable pipeline</span><span>LICENSE RECORDED · OUTPUTS LABELLED · EVIDENCE PUBLIC</span></footer>
  </div>`}
@@ -378,7 +368,7 @@ function appHtml() { const last=state.processed[state.processed.length-1]; const
   </section>
   <section class="stage panel">
    <div class="panel-label"><span>01</span><strong>${vision?'WATCH THE MATCH':'TACTICAL SANDBOX'}</strong><div class="view-switch"><button class="view-mode ${state.view==='vision'?'on':''}" data-view="vision">REAL VIDEO</button><button class="view-mode ${state.view==='map'?'on':''}" data-view="map">TACTICAL MAP</button></div><small>${vision?'Director is analysing this video as it plays':'Optional synthetic event replay'}</small></div>
-   ${vision?'<div class="scoreboard cv-scoreboard"><div class="club home"><span class="crest">▶</span><div><strong>Real football video</strong><small>LICENSED PUBLIC DEMO</small></div></div><div class="score"><b>Director is watching</b><span>FINDING THE MOMENT YOU ASKED FOR</span></div><div class="club away"><div><strong>18-second example</strong><small>AUTOMATIC REPLAY SELECTION</small></div><span class="crest blue">AI</span></div></div>':`<div class="scoreboard"><div class="club home"><span class="crest">EU</span><div><strong>${MATCH.home.name}</strong><small>HOME</small></div></div><div class="score"><b>${state.score[0]} – ${state.score[1]}</b><span>${fmt(state.time)} · DEMO MATCH</span></div><div class="club away"><div><strong>${MATCH.away.name}</strong><small>AWAY</small></div><span class="crest blue">NC</span></div></div>`}
+   ${vision?'<div class="scoreboard cv-scoreboard"><div class="club home"><span class="crest">▶</span><div><strong>Real goal-area attack</strong><small>LICENSED PUBLIC DEMO</small></div></div><div class="score"><b>Director is watching</b><span>FINDING THE ATTACK YOU ASKED FOR</span></div><div class="club away"><div><strong>12-second example</strong><small>AUTOMATIC REPLAY SELECTION</small></div><span class="crest blue">AI</span></div></div>':`<div class="scoreboard"><div class="club home"><span class="crest">EU</span><div><strong>${MATCH.home.name}</strong><small>HOME</small></div></div><div class="score"><b>${state.score[0]} – ${state.score[1]}</b><span>${fmt(state.time)} · DEMO MATCH</span></div><div class="club away"><div><strong>${MATCH.away.name}</strong><small>AWAY</small></div><span class="crest blue">NC</span></div></div>`}
    ${state.view==='vision'?renderVision():renderPitch()}
    ${sourcePipeline()}
    ${vision?`<div class="cv-actions"><button id="toggle-cv-video">Ⅱ</button><span><b>${state.insights.length?'KEY MOMENT FOUND':last?'DIRECTOR NOTICED A SIGNAL':'DIRECTOR IS WATCHING'}</b> ${state.insights.length?'A replay matching your brief is ready below.':last?'It is combining movement over time before choosing a replay.':'Keep watching—the result will appear automatically.'}</span><button id="open-real-lab">SEE TECHNICAL PROOF →</button></div>`:`<div class="transport"><button id="reset">↺</button><button id="play" class="play">${state.playing?'Ⅱ':'▶'}</button><div class="timeline"><i style="width:${state.time/4.5}%"></i>${events.map(e=>`<span style="left:${e.time/4.5}%"></span>`).join('')}</div><select id="speed"><option ${state.speed===1?'selected':''}>1</option><option ${state.speed===2?'selected':''}>2</option><option ${state.speed===4?'selected':''}>4</option><option value="8" ${state.speed===8?'selected':''}>8</option></select><span>×</span></div><div class="ticker"><span>LATEST EVENT</span><strong>${last?`${fmt(last.time)} · ${team(last.team).short} · ${eventLabel(last)} · ${last.player}`:'Waiting for kick-off'}</strong></div>`}
@@ -386,7 +376,7 @@ function appHtml() { const last=state.processed[state.processed.length-1]; const
   <section class="director panel">
    <div class="panel-label"><span>02</span><strong>YOUR BRIEF</strong><small>Tell Director what is worth finding</small></div>
    <div class="director-intro"><div><h2>What moment do you want?</h2><p>Write it normally. Director will watch the video and bring back the matching passage.</p></div><span class="engine"><i></i> WATCHING</span></div>
-   <form id="director-form"><div class="prompt-shell"><span class="prompt-mark">↳</span><textarea id="intent" rows="3" placeholder="e.g. Alert me when two ball contacts occur…">${esc(state.compile?.original||availableTemplates[0])}</textarea><button type="submit" ${state.compiling?'disabled':''}>${state.compiling?'<span class="spinner"></span> VALIDATING':'CREATE MONITOR <span>→</span>'}</button></div><div class="example-row"><span>Try:</span>${availableTemplates.slice(1,4).map((t,i)=>`<button type="button" class="example-chip" data-text="${esc(t)}">${vision?['Rapid movement','80% confidence'][i]:['Player watch','Fast transitions','Shot surge'][i]}</button>`).join('')}<small>⌘ ENTER</small></div></form>
+   <form id="director-form"><div class="prompt-shell"><span class="prompt-mark">↳</span><textarea id="intent" rows="3" placeholder="e.g. Find an attack near goal…">${esc(state.compile?.original||availableTemplates[0])}</textarea><button type="submit" ${state.compiling?'disabled':''}>${state.compiling?'<span class="spinner"></span> ASKING FOUNDRY':'CREATE BRIEF <span>→</span>'}</button></div><div class="example-row"><span>Try:</span>${availableTemplates.slice(1,4).map((t,i)=>`<button type="button" class="example-chip" data-text="${esc(t)}">${vision?['Player convergence','Ball involvement'][i]:['Player watch','Fast transitions','Shot surge'][i]}</button>`).join('')}<small>⌘ ENTER</small></div></form>
    ${state.compile?compileCard(state.compile):''}
    <div class="subhead"><h3>What Director is looking for</h3><span>${state.programs.filter(p=>p.active).length?'ACTIVE':'NOT STARTED'}</span></div>
    <div class="program-list">${state.programs.length?state.programs.map(programCard).join(''):'<div class="empty-small">Compile a direction to start monitoring the match.</div>'}</div>
@@ -397,7 +387,7 @@ function appHtml() { const last=state.processed[state.processed.length-1]; const
 
 function compileCard(c) {
  if(c.status!=='valid') return `<div class="compile-card error"><span>${c.status==='unsupported'?'Unsupported with current data':'Needs clarification'}</span><p>${esc(c.reason)}</p><button class="use-suggestion" data-text="${esc(c.suggestion)}">Use supported alternative</button></div>`;
- return `<div class="compile-card"><div class="compile-check">✓</div><div class="compile-copy"><span>READY TO MONITOR</span><strong>${esc(c.name)}</strong><p>${esc(c.summary)}</p><details><summary>View how this works</summary><pre>${esc(JSON.stringify(c.json,null,2))}</pre></details></div><button id="activate">START MONITORING <span>→</span></button></div>`;
+ return `<div class="compile-card"><div class="compile-check">✓</div><div class="compile-copy"><span>READY · ${esc(c.provider||'validated locally')}</span><strong>${esc(c.name)}</strong><p>${esc(c.summary)}</p><details><summary>View how this works</summary><pre>${esc(JSON.stringify(c.json,null,2))}</pre></details></div><button id="activate">START WATCHING <span>→</span></button></div>`;
 }
 
 function enterRealStudio(demo=false){clearInterval(state.timer);state.page='studio';state.view='vision';state.demo=demo;state.playing=false;state.compile=null;state.programs=[defaultRealProgram()];resetRealRun();render();window.scrollTo(0,0)}

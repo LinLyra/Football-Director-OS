@@ -36,7 +36,7 @@ Click **Watch the 90-second demo**. The Studio opens with the monitoring request
 
 ### Narration
 
-> I ask Director to find a high-tempo passage with rapid ball travel and repeated player involvement.
+> I ask Director to find an attack near goal that is worth replaying.
 
 ### 中文提示
 
@@ -60,21 +60,21 @@ Point to the natural-language request and the active composite monitor. Briefly 
 
 ### Screen
 
-Let the licensed video run. Point out that the event ticker changes at the exact CV timestamps. Do not cut before the Director moment appears at roughly 4.65 seconds.
+Let the licensed video run. The goal is visible and play develops beside it. Do not cut before the Director attack appears at roughly 5.67 seconds.
 
 ### Narration
 
-> Ten candidates from the real CV run enter the rule engine at their exact video timestamps. Director combines rapid ball travel with repeated player involvement, while avoiding unsupported claims such as a shot or goal.
+> Director combines a human-verified goal-area phase with real player-convergence and ball-tracking evidence. It preserves the source of each signal instead of pretending the generic detector recognized a goal.
 
 ### 中文提示
 
-保留真实视频和顶部演示步骤。约 4.65 秒时，高节奏片段会自动出现。
+保留真实视频和顶部演示步骤。约 5.67 秒时，门前进攻片段会自动出现。
 
 ## 0:59–1:17 — Explainability
 
 ### Screen
 
-After the insight appears, show **High-tempo passage selected**, its Director Decision card, clip range and the supporting event IDs. Click **Replay Key Moment** once.
+After the insight appears, show **Goal-area attack selected**, its Director Decision card, clip range and the three provenance-labelled evidence records. Click **Play Key Moment** once.
 
 ### Narration
 
@@ -82,7 +82,7 @@ After the insight appears, show **High-tempo passage selected**, its Director De
 
 ### 中文提示
 
-必须清晰拍到 `1.57s`、`2.45s`、`4.65s` 的证据、计算结果和自动回放区间。
+必须清晰拍到 `2.80s`、`3.50s`、`5.67s` 的证据来源、计算结果和自动回放区间。
 
 ## 1:17–1:34 — Personalization
 
@@ -116,11 +116,11 @@ Click **Open Broadcast Overlay**. End on the full-screen Chinese broadcast graph
 
 > Every football fan watches the same match, but cares about different moments. Football Director OS turns each viewer's question into live, explainable match intelligence.
 >
-> I ask Director to find a high-tempo passage with rapid ball travel and repeated player involvement.
+> I ask Director to find an attack near goal that is worth replaying.
 >
 > An AI provider can translate that request into a constrained monitoring program. The program is validated locally, and deterministic code—not the model—decides whether the event actually happened.
 >
-> Ten candidates from the real CV run enter the rule engine at their exact video timestamps. Director combines rapid ball travel with repeated player involvement, while avoiding unsupported claims such as a shot or goal.
+> Director combines a human-verified goal-area phase with real player-convergence and ball-tracking evidence. It preserves the source of each signal instead of pretending the generic detector recognized a goal.
 >
 > When the pattern is complete, Director selects a replay range and prepares a commentary cue. Every word is auditable through the exact timestamps, track IDs, confidence values and composite-window calculation.
 >
@@ -134,7 +134,7 @@ Click **Open Broadcast Overlay**. End on the full-screen Chinese broadcast graph
 - [ ] Homepage headline visible at the beginning.
 - [ ] Natural-language request clearly readable.
 - [ ] Real video and timestamped event ticker are visible.
-- [ ] High-tempo passage is triggered at approximately 4.65 seconds.
+- [ ] Goal-area attack is triggered at approximately 5.67 seconds.
 - [ ] Director Decision, replay range and three supporting events are visible.
 - [ ] Fan/Analyst change visible.
 - [ ] Chinese commentary visible.

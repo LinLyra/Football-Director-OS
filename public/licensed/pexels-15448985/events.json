@@ -1,0 +1,56 @@
+{
+  "schema_version": "1.0",
+  "source": {
+    "asset": "Pexels 15448985",
+    "creator": "Luis Quintero",
+    "url": "https://www.pexels.com/video/football-players-trying-to-score-a-goal-during-a-match-15448985/",
+    "license": "Pexels License"
+  },
+  "method": "YOLO person/sports-ball detections + ByteTrack + human-verified scene annotation",
+  "disclaimer": "The attacking-phase label is human verified. Computer-vision outputs remain candidates, not football action ground truth.",
+  "frames_processed": 360,
+  "person_detections": 1204,
+  "ball_visible_frames": 11,
+  "events": [
+    {
+      "id": "goal-area-attack-000084",
+      "type": "GOAL_AREA_ATTACK_VERIFIED",
+      "frame": 84,
+      "timestamp_seconds": 2.8,
+      "confidence": 1.0,
+      "status": "human_verified",
+      "evidence": {
+        "annotation": "Attacking play is visibly occurring beside the goal area.",
+        "source": "human_video_review",
+        "goal_visible": true
+      }
+    },
+    {
+      "id": "player-cluster-000105",
+      "type": "PLAYER_CLUSTER_CANDIDATE",
+      "frame": 105,
+      "timestamp_seconds": 3.5,
+      "confidence": 0.92,
+      "status": "candidate",
+      "evidence": {
+        "person_boxes": 6,
+        "source": "yolo_bytetrack",
+        "description": "Six player detections converge during the goal-area phase."
+      }
+    },
+    {
+      "id": "ball-involvement-000170",
+      "type": "BALL_INVOLVEMENT_CANDIDATE",
+      "frame": 170,
+      "timestamp_seconds": 5.67,
+      "confidence": 0.89,
+      "status": "candidate",
+      "evidence": {
+        "ball_track_id": 142,
+        "supporting_frames": 11,
+        "source": "yolo_bytetrack",
+        "description": "A tracked sports-ball detection persists through the contested phase."
+      }
+    }
+  ]
+}

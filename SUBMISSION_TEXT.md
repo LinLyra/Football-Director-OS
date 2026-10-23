@@ -8,7 +8,7 @@ Football Director OS
 
 ## Elevator pitch
 
-Football Director OS is an explainable AI match director. A viewer describes the kind of moment they want to see; Director watches licensed football footage, evaluates timestamped computer-vision events, selects a matching replay window, and prepares audience-specific commentary and a broadcast-ready graphic. Every output remains linked to the exact frames, tracks, confidence values and rule computation that produced it.
+Football Director OS is an explainable AI match director. A viewer describes the kind of moment they want to see; Director watches licensed football footage, combines verified match context with timestamped computer-vision evidence, selects a matching replay window, and prepares audience-specific commentary and a broadcast-ready graphic. Every output remains linked to its source, exact frames, tracks, confidence values and rule computation.
 
 ## Problem
 
@@ -16,8 +16,8 @@ Football broadcasts are produced for one mass audience even though fans, analyst
 
 ## What we built
 
-- an offline CV pipeline using YOLO 11 and ByteTrack on licensed football footage;
-- a normalized event adapter containing ten timestamped ball-contact and rapid-movement candidates;
+- an offline CV pipeline using YOLO 11 and ByteTrack on licensed goal-area footage;
+- a provenance-aware adapter separating human-verified scene context from player and ball CV candidates;
 - natural-language compilation into a constrained monitoring DSL;
 - deterministic count, confidence and composite-window detection;
 - automatic key-moment and replay-window selection;
@@ -43,10 +43,10 @@ Also relevant to the Grand Prize criteria. Do not select the Foundry category un
 
 1. Open `https://football-director-os.vercel.app` in a desktop browser.
 2. Click **See a real example**.
-3. Director automatically installs the brief: “Find a high-tempo passage with rapid ball travel and repeated player involvement.”
-4. Let the licensed 18-second video play. The result normally appears after the video reaches 4.65 seconds; allow extra time for the first media load.
-5. When **Worth a replay** appears, click **Play the moment**.
-6. In **Use this moment**, open **Why did Director choose this?** to inspect the three source candidates, timestamps, tracks, confidence and composite-window calculation.
+3. Director automatically installs the brief: “Find an attack near goal that is worth replaying.”
+4. Let the licensed 12-second video play. The result normally appears after the video reaches 5.67 seconds; allow extra time for the first media load.
+5. When **Goal-area replay ready** appears, click **Play the attack**.
+6. In **Use this moment**, open **Why did Director choose this?** to inspect the verified context, two CV evidence events, timestamps, confidence and composite-sequence calculation.
 7. Change the language to Chinese or Spanish.
 8. Click **Create live graphic**.
 9. Optionally open **How the video was analysed** from the homepage for the complete ten-event CV evidence ledger.
