@@ -77,7 +77,7 @@ const state = {
   time: 0, speed: 2, playing: false, timer: null, cursor: 0, score: [0,0],
   mode: 'casual', selectedInsight: null, compile: null, compiling: false,
   programs: [], insights: [], processed: [], language:'en', overlay:false, demo:false, page:'home', view:'vision', realScene:'pexels-15448985',
-  realCursor:0, realLastTime:0, replayUntil:null,
+  realCursor:0, realLastTime:0, replayUntil:null, restartVideo:false,
 };
 
 const isLocalPreview = ['localhost', '127.0.0.1'].includes(window.location.hostname);
@@ -400,9 +400,9 @@ function bind() {
  document.querySelector('#toggle-cv-video')?.addEventListener('click',e=>{const video=document.querySelector('#studio-real-video');if(!video)return;if(video.paused){video.play().catch(()=>{});e.currentTarget.textContent='Ⅱ'}else{video.pause();e.currentTarget.textContent='▶'}});
  document.querySelectorAll('.view-mode').forEach(b=>b.addEventListener('click',()=>switchDataView(b.dataset.view)));
  document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>{state.mode=b.dataset.mode;render()}));
- document.querySelector('#director-form')?.addEventListener('submit',async e=>{e.preventDefault();const text=document.querySelector('#intent').value.trim();state.compiling=true;state.compile={original:text};render();state.compile=await compileWithProvider(text);state.compiling=false;render()});
+ document.querySelector('#director-form')?.addEventListener('submit',async e=>{e.preventDefault();const text=document.querySelector('#intent').value.trim();state.restartVideo=true;resetRealRun();state.compiling=true;state.compile={original:text};render();state.compile=await compileWithProvider(text);state.compiling=false;render()});
  document.querySelector('#intent')?.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter')document.querySelector('#director-form').requestSubmit()});
- document.querySelector('#activate')?.addEventListener('click',()=>{const c=state.compile;state.programs.unshift({...c,id:`prog_${Date.now()}`,version:1,active:true,lastTrigger:null,conditionActive:false});state.compile=null;render()});
+ document.querySelector('#activate')?.addEventListener('click',()=>{const c=state.compile;state.programs.unshift({...c,id:`prog_${Date.now()}`,version:1,active:true,lastTrigger:null,conditionActive:false});state.compile=null;state.restartVideo=true;resetRealRun();render()});
  document.querySelectorAll('.toggle-program').forEach(b=>b.addEventListener('click',()=>{const p=state.programs.find(x=>x.id===b.dataset.id);p.active=!p.active;render()}));
  document.querySelectorAll('.delete-program').forEach(b=>b.addEventListener('click',()=>{state.programs=state.programs.filter(x=>x.id!==b.dataset.id);render()}));
  document.querySelectorAll('.inspect-program').forEach(b=>b.addEventListener('click',()=>{const p=state.programs.find(x=>x.id===b.dataset.id);state.compile={...p,original:p.summary,status:'valid'};render()}));
@@ -428,12 +428,14 @@ function bind() {
 }
 function render(){
  const priorVideo=document.querySelector('#studio-real-video');
- const priorTime=priorVideo?.currentTime||0;
- const priorPlaying=Boolean(priorVideo&&!priorVideo.paused);
- if(priorVideo&&state.page==='studio'&&state.view==='vision')processRealUntil(priorTime);
+ const restartVideo=state.restartVideo;
+ const priorTime=restartVideo?0:(priorVideo?.currentTime||0);
+ const priorPlaying=Boolean(priorVideo&&!priorVideo.paused)||restartVideo;
+ if(priorVideo&&!restartVideo&&state.page==='studio'&&state.view==='vision')processRealUntil(priorTime);
  document.querySelector('#app').innerHTML=state.page==='home'?landingPage():state.page==='lab'?realLabPage():appHtml();
  bind();
  const video=document.querySelector('#studio-real-video');
  if(video){video.currentTime=priorTime;if(priorPlaying||!priorVideo)video.play().catch(()=>{});}
+ state.restartVideo=false;
 }
 render();
